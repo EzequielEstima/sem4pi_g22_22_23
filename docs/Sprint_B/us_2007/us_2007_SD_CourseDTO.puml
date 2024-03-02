@@ -1,0 +1,53 @@
+@startuml
+autonumber
+
+participant ": ApproveRejectEnrollmentService" as ARES <<Service>>
+participant ": CourseMapper" as CM <<DTO>>
+participant ": CourseDTOBuilder" as CB <<Builder>>
+participant ": Course" as C <<Domain>>
+
+participant ": CourseIdentifier" as CI <<Domain>>
+participant ": CourseTitle" as CT <<Domain>>
+participant ": CourseDTOWithIdTitle" as CDTO <<DTO>>
+
+[o-> CM : toDTOWithIdTitle(course)
+activate CM
+CM -> CB : create()
+activate CB
+deactivate CB
+CM -> C : returnCourseIdentifierString()
+activate C
+C -> CI : returnCourseIdentifierString()
+activate CI
+CI --> C : courseIdentifier
+deactivate CI
+C --> CM : courseIdentifier
+deactivate C
+CM -> CB : withCourseIdentifier()
+activate CB
+CB --> CM : courseDTOBuilder
+deactivate CB
+CM -> C : returnCourseTitleString()
+activate C
+C -> CT : returnCourseTitleString()
+activate CT
+CT --> C : courseTitle
+deactivate CT
+C --> CM : courseTitle
+deactivate C
+CM -> CB : withCourseTitle()
+activate CB
+
+CB --> CM : courseDTOBuilder
+deactivate CB
+CM -> CB : buildWithIdTitle()
+activate CB
+CB -> CDTO : create(courseIdentifier, courseTitle)
+activate CDTO
+deactivate CDTO
+CB --> CM : courseDTO
+deactivate CB
+CM -->o[ : courseDTO
+deactivate CM
+
+@enduml

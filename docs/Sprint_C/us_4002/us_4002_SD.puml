@@ -1,0 +1,39 @@
+@startuml
+autonumber
+title Cancel Meeting
+
+actor "User" as User
+
+participant ": CancelMeetingUI" as UI <<Presentation>>
+control "CancelMeetingController" as CTRL <<Application>>
+participant ": CancelMeetingService" as CMS <<Service>>
+participant ": Meeting" as M <<Domain>>
+
+database MeetingRepository as MR <<Repository>>
+
+activate User
+User -> UI : chooses the meeting
+activate UI
+
+UI -> CTRL : cancelMeeting(meetingDTO)
+activate CTRL
+
+CTRL -> CMS : cancelMeeting(meetingDTO)
+activate CMS
+
+CMS -> MR : ofIdentity(MeetingIdentifier)
+activate MR
+MR --> CMS : meeting
+deactivate MR
+CMS -> M : cancelMeeting()
+activate M
+return true
+CMS -> MR : save(meeting)
+activate MR
+deactivate MR
+deactivate CMS
+deactivate CTRL
+
+UI--> User : informs operation success
+
+@enduml

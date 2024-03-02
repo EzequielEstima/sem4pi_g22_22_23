@@ -1,0 +1,37 @@
+
+@startuml
+autonumber
+title List Board I Participate - SharedBoardServer
+
+participant ": AttendClient" as AC <<Application>>
+participant ": DataInputStream" as DIS
+participant ": DataOutputStream" as DOS
+participant ": SBPMessageFormat" as SBPMF
+participant ": BoardDTOWithTitleMapper" as BM <<Mapper>>
+participant ": BoardRepository" as BR <<Repository>>
+
+activate AC
+AC -> DIS : readUTF()
+activate DIS
+return message
+AC -> SBPMF : decodeParams(message)
+activate SBPMF
+return params
+AC -> BR : findAllBoardsIParticipateWithWritePermission(user);
+BR -> AC : List<Board>
+AC -> BM : toDTO(List<BoardDTOWithTitle>)
+activate BM
+BM -> AC : List<BoardDTOWithTitle>
+deactivate BM
+AC -> SBPMF : createShowNumberOfCellsRequestRCV(List<BoardDTOWithTitle>)
+activate SBPMF
+return message
+deactivate SBPMF
+AC -> DOS : writeUTF(message)
+activate DOS
+deactivate DOS
+deactivate AC
+
+
+
+@enduml

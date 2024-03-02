@@ -1,0 +1,82 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+autonumber
+title ShareBoard - SharedBoardServer
+
+participant "AttendClient" as ac <<Application>>
+participant "DataInputStream" as dis
+participant "ViewInRealTimeRequest" as request
+participant "DataOutputStream" as dos
+participant "SBPMessageFormat" as sbp
+participant "BoardInformationController" as ctrl <<ShareBoardServer>> <<Application>>
+participant "BoardInformationService" as bis <<Service>>
+participant "CellDTOWithColumnRowPostItCreatorMapper" as ma <<DTO>>
+participant "CellDTOWithColumnRowPostItCreatorBuilder" as builder <<DTO>>
+participant "CellDTOWithColumnRowPostItCreator" as dto <<DTO>>
+database "BoardRepository" as br <<Repository>>
+
+activate ac
+ac -> dis : create(socket)
+activate dis
+return inputStream
+ac -> dos : create(socket)
+activate dos
+return outputStream
+ac -> dis : readUTF()
+activate dis
+return message
+ac -> sbp : decodeFormat(message)
+activate sbp
+return arrayFormat
+ac -> request: create()
+ac -> request: viewInRealTime(message,outputStream)
+activate request
+request -> sbp : decodeParams(message)
+activate sbp
+return params
+request -> ctrl : getBoardInformation(boardId)
+activate ctrl
+ctrl -> bis : getBoardCellsInformation(boardId)
+activate bis
+bis -> br : findBoardByTitle(boardId)
+activate br
+return board
+bis -> br : getAllCellsFromABoard(board)
+activate br
+br --> bis: listCells
+deactivate br
+loop for each cell in cellList
+bis -> br : getCreatorOfAPostItBoardOwner(cell)
+activate br
+return person
+alt error NoResultException
+bis -> br : getCreatorOfAPostItBoardParticipant(cell)
+activate br
+return person
+end
+bis -> ma: toDto(cell,person)
+activate ma
+ma -> builder: build()
+activate builder
+builder -> dto: create(rowIdentifier,rowTitle,columnIdentifier,columnTitle,content)
+activate dto
+return CellDTOWithColumnRowPostItCreator
+return CellDTOWithColumnRowPostItCreator
+return CellDTOWithColumnRowPostItCreator
+end
+
+bis --> ctrl: listCellDTOWithColumnRowPostItCreator
+deactivate bis
+ctrl --> request : listCellDTOWithColumnRowPostItCreator
+deactivate ctrl
+request -> sbp : createBoardInfoRequest(listCellDTOWithColumnRowPostItCreator)
+activate sbp
+return boardInfoRequest
+request -> dos : writeUTF(boardInfoRequest)
+activate dos
+deactivate dos
+deactivate ac
+@enduml

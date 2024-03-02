@@ -1,0 +1,24 @@
+@startuml
+participant Service as SERVICE  <<application>>
+participant PersistenceContext as PERS_CONTX <<persistence>>
+participant RepositoryFactory as REPO_FAC <<factory>>
+database XRepository as REPO <<repository>>
+
+autonumber
+activate SERVICE
+SERVICE -> PERS_CONTX : repositories()
+activate PERS_CONTX
+PERS_CONTX -> REPO_FAC : create()
+activate REPO_FAC
+deactivate REPO_FAC
+PERS_CONTX -->SERVICE : repoFactory
+deactivate PERS_CONTX
+SERVICE -> REPO_FAC : XRepository()
+activate REPO_FAC
+REPO_FAC -> REPO : create()
+activate REPO
+deactivate REPO
+REPO_FAC --> SERVICE : XRepo
+deactivate REPO_FAC
+deactivate SERVICE
+@enduml

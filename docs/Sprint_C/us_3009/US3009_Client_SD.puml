@@ -1,0 +1,35 @@
+@startuml
+autonumber
+title ArchiveBoard - SharedBoardClient
+
+actor "BoardParticipant" as BP
+
+participant ": HistoryOfUpdatesUI" as UI <<SharedBoardClient>> <<Presentation>>
+participant ": SBPMessageFormat" as SBPF
+participant ": DataOutputStream" as DOS
+participant ": DataInputStream" as DIS
+activate BP
+BP -> UI : chooses board
+activate UI
+
+UI -> UI : HistoryOfUpdatesRequest(boardId)
+activate UI
+UI -> SBPF : HistoryOfUpdatesRequest(boardId)
+activate SBPF
+return historyOfUpdatesRequest
+UI -> DOS : create(socket)
+activate DOS
+deactivate DOS
+UI -> DIS : create(socket)
+activate DIS
+deactivate DIS
+UI -> DOS : writeUTF(historyOfUpdatesRequest)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return true
+return : shows task list
+deactivate UI
+@enduml

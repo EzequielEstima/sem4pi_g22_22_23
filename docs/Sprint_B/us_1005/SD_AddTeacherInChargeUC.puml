@@ -1,0 +1,60 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+autonumber
+
+actor Manager
+
+participant "SetTeacherUI" as UI <<presentation>>
+participant "AddTeacherInChargeInACourseController" as Controller <<application>>
+participant "SetTeacherService" as Service <<application>>
+
+participant "Course" as Course <<domain>>
+
+
+database "TeacherRepository" as TeacherRepository <<repository>>
+database "CourseRepository" as CourseRepository <<repository>>
+
+activate Manager
+activate UI
+
+Manager -> UI: select data
+
+
+
+UI -> Controller : addTeacherInCharge(List<TeacherDTOWithAcronym>, CourseDTOWithIdTitle )
+activate Controller
+
+Controller -> Service : addTeacherInCharge(List<TeacherDTOWithAcronym>, CourseDTOWithIdTitle)
+
+activate Service
+Service -> TeacherRepository : findTeacherByAcronym(acronym)
+TeacherRepository -> Service : teacher
+
+
+Service->CourseRepository : findCourseById(courseIdentifier)
+
+CourseRepository -> Service : course
+
+Service -> Course : addTeacherInCharge(teacher)
+
+Service -> CourseRepository : save(course)
+
+Service -> Controller : return true
+
+deactivate Service
+
+Controller -> UI : return true
+
+deactivate Controller
+
+UI -> Manager : show success message
+
+deactivate UI
+deactivate Manager
+
+
+@enduml
+@enduml

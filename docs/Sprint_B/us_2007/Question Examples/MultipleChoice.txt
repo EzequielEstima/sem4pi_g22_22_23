@@ -1,0 +1,43 @@
+-----------------Multiple Choice Question-----------------
+-------------------------One Option-----------------------
+
+Question
+
+Select one option:
+- Choice1
+- Choice2
+- Choice3
+- Choice4
+
+---------------------Multiple Options---------------------
+Question
+
+Select multiple options:
+- Choice1
+- Choice2
+- Choice3
+- Choice4
+----------------------------------------------------------
+--------------Multiple Choice Question Example------------
+-------------------------One Option-----------------------
+
+What is the Capital of Japan?
+
+Select one option:
+- Seoul
+- Ottawa
+- Rome
+- Tokyo
+
+---------------------Multiple Options---------------------
+
+Which states cities are from the United States?
+
+Select multiple options:
+- Seoul
+- Ottawa
+- Rome
+- New York
+- Lisbon
+- Los Angeles
+------------------------------------------------------------

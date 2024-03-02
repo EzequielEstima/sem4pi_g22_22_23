@@ -1,0 +1,151 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor Manager
+participant "AddUserUI" as ui <<presentation>>
+participant "AddUserController" as ctrl <<application>>
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant PersonService as PerHelper <<application>>
+participant UserManagementService as userManSV <<application>>
+participant SystemUserBuilder as SysBuilder <<builder>>
+participant SystemUser as SU  <<domain>>
+participant TeacherBuilder as TeaBuilder <<builder>>
+participant Teacher as Teacher <<domain>>
+participant PersonBuilder as PerBuilder <<builder>>
+participant Person as Person <<domain>>
+
+participant PersistenceContext as Persistence <<persistence>>
+participant RepositoryFactory as RepFactory <<factory>>
+database UserRepository as UserRep <<repository>>
+database personRepository as PerRep <<repository>>
+ui --> Manager : ask for Information
+activate ui
+activate Manager
+Manager ->ui : acronym, Date of Birth, Tax Payer Number
+ui -> Manager: verify information
+Manager -> ui:confirmation
+note right
+In this SD the confirmation is valid
+end note
+
+
+ui ->ctrl: addUser(username, password, firstName, lastName, fullName, email, roleTypes, acronym, Date of Birth, Tax Payer Number)
+activate ctrl
+ctrl -> authSV : ensureAuthenticatedUserHasAnyOf(BaseRoles.POWER_USER, BaseRoles.MANAGER)
+
+
+
+
+ctrl ->PerHelper: registerNewTeacher(FullName,user,acronym, Date of Birth, Tax Payer Number)
+activate PerHelper
+
+
+PerHelper -> userManSV : registerNewUser(username, password, firstName,lastName, email, roles, createdOn)
+activate userManSV
+userManSV -> SysBuilder: create(policy, encoder)
+userManSV -> SysBuilder: with(username, password, firstName, lastName, email).createdOn(createdOn).withRoles(roles)
+deactivate SysBuilder
+userManSV -> SysBuilder: build()
+activate SysBuilder
+SysBuilder -> SU: create(username, password, name, email, roles, createdOn)
+activate SU
+SU -> SysBuilder: newUser
+deactivate SU
+SysBuilder -> userManSV: newUser
+deactivate SysBuilder
+
+userManSV -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence -> userManSV: factory
+deactivate Persistence
+userManSV -> RepFactory: users()
+activate RepFactory
+RepFactory -> UserRep: create
+RepFactory -> userManSV: userRepository
+deactivate RepFactory
+userManSV->UserRep:save(user)
+userManSV->PerHelper: user
+
+deactivate userManSV
+
+
+PerHelper ->TeaBuilder:  create
+PerHelper ->TeaBuilder: with(acronym, Date of Birth, Tax Payer Number)
+
+PerHelper -> TeaBuilder: build()
+activate TeaBuilder
+TeaBuilder -> Teacher: create(acronym, Date of Birth, Tax Payer Number)
+activate Teacher
+Teacher -> TeaBuilder: teacher
+deactivate Teacher
+TeaBuilder -> PerHelper : teacher
+deactivate TeaBuilder
+
+
+PerHelper ->PerBuilder:  create
+PerHelper ->PerBuilder: with(fullName,user,student)
+
+
+PerHelper -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence -> PerHelper: factory
+deactivate Persistence
+PerHelper -> RepFactory: personRepository()
+activate RepFactory
+RepFactory -> PerRep: create
+RepFactory -> PerHelper: personRepository
+deactivate RepFactory
+
+PerHelper -> PerRep:findTotalNumberOfPerson()
+activate PerRep
+PerRep -> PerHelper: id
+deactivate PerRep
+PerHelper ->PerBuilder: withID_Pessoa(id+1)
+
+
+PerHelper -> PerBuilder: build()
+activate PerBuilder
+PerBuilder -> Person: create(FullName,user,ID_Person,student)
+activate Person
+Person -> PerBuilder: person
+deactivate Person
+PerBuilder -> PerHelper : person
+deactivate PerBuilder
+
+
+PerHelper -> PerRep: save(person)
+
+
+
+alt "if exception is throwed"
+PerHelper -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence -> PerHelper: factory
+deactivate Persistence
+PerHelper -> RepFactory: users()
+activate RepFactory
+RepFactory -> UserRep: create
+RepFactory -> PerHelper: userRepository
+deactivate RepFactory
+PerHelper->UserRep: delete(user)
+end
+
+PerHelper -> ctrl: success
+ctrl -> ui: success
+ui-> Manager: Inform if the operation was a success
+
+deactivate ui
+deactivate ctrl
+
+deactivate RepFactory
+
+
+
+
+@enduml

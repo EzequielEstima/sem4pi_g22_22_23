@@ -1,0 +1,38 @@
+@startuml
+autonumber
+actor User as ACTOR
+participant AcceptRejectInvitationUI as UI <<presentation>>
+control AcceptRejectInvitationController as CONTROLLER <<application>>
+participant AcceptRejectInvitationService as SERVICE <<application>>
+participant Invitation as INV <<domain>>
+database InvitationRepository as INV_REPO <<repository>>
+
+ACTOR -> UI: Inserts invitation and status
+activate ACTOR
+activate UI
+UI -> CONTROLLER : updateResponseStatus(invitationId, newStatus)
+activate CONTROLLER
+CONTROLLER -> SERVICE : updateResponseStatus(invitationId, newStatus)
+activate SERVICE
+
+SERVICE -> INV_REPO : ofIdentity(invitationId)
+activate INV_REPO
+INV_REPO --> SERVICE : invitation
+deactivate INV_REPO
+
+SERVICE -> INV : updateResponseStatus(newStatus)
+activate INV
+deactivate INV
+
+SERVICE -> INV_REPO : save(invitation)
+activate INV_REPO
+deactivate INV_REPO
+
+SERVICE --> CONTROLLER : Informs operation success
+deactivate SERVICE
+CONTROLLER --> UI : Informs operation success
+deactivate CONTROLLER
+UI --> ACTOR : Informs operation success
+deactivate UI
+deactivate ACTOR
+@enduml

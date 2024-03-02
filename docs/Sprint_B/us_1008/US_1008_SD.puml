@@ -1,0 +1,126 @@
+@startuml
+@startuml
+actor Student as ACTOR
+participant RequestEnrollmentUI as UI <<presentation>>
+control RequestEnrollmentController as CONTROLLER <<application>>
+participant RequestEnrollmentService as SERVICE <<application>>
+participant AuthorizationService as AUTHZ_SERVICE <<application>>
+participant CourseMapper as COURSE_MAP <<dto>>
+participant Course as COURSE <<domain>>
+participant CourseIdentifier as COURSE_ID <<domain>>
+participant EnrollmentFactory as ENROLL_FAC <<domain>>
+participant Enrollment as ENROLL <<domain>>
+participant Student as STUDENT <<domain>>
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+database CourseRepository as COURSE_REPO <<repository>>
+database EnrollmentRepository as ENROLL_REPO <<repository>>
+database StudentRepository as STUDENT_REPO <<repository>>
+autonumber
+activate ACTOR
+activate UI
+
+ACTOR -> UI : Student selects option to request an enrollment
+UI -> CONTROLLER : create()
+activate CONTROLLER
+CONTROLLER -> SERVICE : create()
+activate SERVICE
+note right : Creation of CourseRepository as described in "US_1008_SD_RepositoryCreation"
+deactivate SERVICE
+deactivate CONTROLLER
+
+UI -> CONTROLLER : listAllStudentAvailableCourses()
+activate CONTROLLER
+CONTROLLER -> SERVICE : listAllStudentAvailableCourses()
+activate SERVICE
+SERVICE -> COURSE_REPO : listAllCoursesOpenToEnrollments()
+activate COURSE_REPO
+COURSE_REPO --> SERVICE : courseList
+deactivate COURSE_REPO
+loop for each course from courseList
+SERVICE -> COURSE_MAP : toDTOWithIdTitle(course)
+note right : This method is represented in "us_1008_SD_toDTOWithIdTitle"
+activate COURSE_MAP
+COURSE_MAP --> SERVICE : courseDTO
+deactivate COURSE_MAP
+end loop
+SERVICE --> CONTROLLER : courseDTOList
+deactivate SERVICE
+CONTROLLER --> UI : courseDTOList
+deactivate CONTROLLER
+UI --> ACTOR : System shows available courses and ask the student to select one
+ACTOR -> UI : Student chooses one course
+UI --> ACTOR : System ask for confirmation
+ACTOR -> UI : Student confirms
+UI -> CONTROLLER : createEnrollment(courseDTO)
+activate CONTROLLER
+CONTROLLER -> SERVICE : createEnrollment(courseDTO)
+
+activate SERVICE
+note right SERVICE : Creation of EnrollmentRepository as described in "US_1008_SD_RepositoryCreation"
+note right SERVICE : Creation of StudentRepository as described in "US_1008_SD_RepositoryCreation"
+SERVICE -> auth: authorizationService()
+activate auth
+auth -> SERVICE: authz
+deactivate auth
+SERVICE -> authSV: session()
+activate authSV
+authSV --> SERVICE: userSession
+deactivate authSV
+SERVICE -> userSe: authenticatedUser()
+activate userSe
+userSe --> SERVICE : systemUser
+deactivate userSe
+SERVICE -> STUDENT_REPO : findStudentBySystemUser(systemUser)
+activate STUDENT_REPO
+STUDENT_REPO --> SERVICE : student
+deactivate STUDENT_REPO
+SERVICE -> COURSE_ID : create(courseIdentifier)
+activate COURSE_ID
+deactivate COURSE_ID
+SERVICE -> COURSE_REPO : ofIdentity(courseId)
+activate COURSE_REPO
+COURSE_REPO --> SERVICE : course
+deactivate COURSE_REPO
+SERVICE -> ENROLL_REPO : findEnrollmentByCourseIDAndMechNumber(courseId, mechNumber)
+activate ENROLL_REPO
+ENROLL_REPO --> SERVICE : enrollment
+alt if no enrollment found
+deactivate ENROLL_REPO
+SERVICE -> ENROLL_REPO : count()
+activate ENROLL_REPO
+ENROLL_REPO --> SERVICE : total
+deactivate ENROLL_REPO
+SERVICE -> ENROLL_FAC : buildEnrollment(enrollmentId,course,student)
+activate ENROLL_FAC
+ENROLL_FAC -> ENROLL : create(enrollmentId,status,course,student)
+activate ENROLL
+deactivate ENROLL
+ENROLL_FAC --> SERVICE : newEnrollment
+deactivate ENROLL_FAC
+deactivate ENROLL
+SERVICE -> ENROLL_REPO : save(newEnrollment)
+activate ENROLL_REPO
+deactivate ENROLL_REPO
+SERVICE -> COURSE :addEnrollment(newEnrollment)
+activate COURSE
+deactivate COURSE
+SERVICE -> COURSE_REPO :save(course)
+activate COURSE_REPO
+deactivate COURSE_REPO
+SERVICE -> STUDENT : addEnrollment(newEnrollment)
+activate STUDENT
+deactivate STUDENT
+SERVICE -> STUDENT_REPO : save(student)
+activate STUDENT_REPO
+deactivate STUDENT_REPO
+end alt
+SERVICE --> CONTROLLER : operation success
+deactivate SERVICE
+CONTROLLER --> UI : operation success
+deactivate CONTROLLER
+UI --> ACTOR : System informs operation success
+deactivate UI
+deactivate ACTOR
+@enduml

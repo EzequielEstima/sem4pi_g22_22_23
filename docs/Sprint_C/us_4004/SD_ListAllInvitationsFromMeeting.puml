@@ -1,0 +1,69 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+actor Person as p
+
+participant "ListAllInvitationsFromMeetingUI" as ui <<Presentation>>
+participant "ListAllInvitationsFromMeetingController" as ctrl <<Application>>
+participant "ListAllInvitationsFromMeetingService" as service <<Service>>
+participant PersistenceContext as persistence <<persistence>>
+participant RepositoryFactory as repFactory <<factory>>
+
+participant InvitationDTOWithStatusAndPersonNameMapper as ma <<DTO>>
+participant InvitationDTOWithStatusAndPersonNameBuilder as builder <<DTO>>
+participant InvitationDTOWithStatusAndPersonName as dto <<DTO>>
+
+
+database "InvitationRepository" as invRep <<Repository>>
+
+
+activate p
+p -> ui: inserts meeting and ask for list
+activate ui
+ui -> ctrl: create()
+ui -> ctrl: listAllInvitationsFromMeeting(meetingDTO)
+activate ctrl
+ctrl ->service: create()
+ctrl ->  service: listAllInvitationsFromMeeting(meetingDTO)
+activate service
+
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: invitationRepository()
+activate repFactory
+repFactory -> invRep: create
+repFactory --> service: invitationRepository
+deactivate repFactory
+
+service -> invRep: getInvitationWithIdMeeting(meetingId)
+activate invRep
+invRep --> service: listInvitation
+deactivate invRep
+
+alt for each Invitation in listInvitation
+service -> ma: toDTO(invitation)
+activate ma
+ma -> builder: create()
+ma -> builder: withStatusAndName(status,name)
+ma -> builder: build()
+activate builder
+builder -> dto: create(status,name)
+activate dto
+dto-->builder: invitationDTOWithStatusAndPersonName
+deactivate dto
+builder --> ma : invitationDTOWithStatusAndPersonName
+deactivate builder
+ma --> service: invitationDTOWithStatusAndPersonName
+deactivate ma
+end alt
+service --> ctrl: listInvitationDTO
+deactivate service
+ctrl --> ui: listInvitationDTO
+ui --> p : shows all invitations and their respective status
+deactivate ui
+deactivate p
+@enduml

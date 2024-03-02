@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence">
+  <persistence-unit name="eapli.base">
+    <!--
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    -->
+    <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+    <class>eapli.framework.infrastructure.authz.domain.model.SystemUser</class>
+    <class>eapli.framework.infrastructure.authz.domain.model.Role</class>
+    <class>eapli.framework.infrastructure.authz.domain.model.RoleSet</class>
+    <class>eapli.framework.infrastructure.authz.domain.model.RoleAssignment</class>
+    <class>eapli.base.usermanagement.domain.Person</class>
+    <class>eapli.base.usermanagement.domain.Teacher</class>
+    <class>eapli.base.usermanagement.domain.Student</class>
+    <class>eapli.base.clientusermanagement.domain.ClientUser</class>
+    <class>eapli.base.clientusermanagement.domain.SignupRequest</class>
+    <class>eapli.base.enrollments.domain.Enrollment</class>
+    <class>eapli.base.courseclasses.domain.Class</class>
+    <class>eapli.base.courseclasses.domain.ExtraClass</class>
+    <class>eapli.base.coursemanagement.domain.Course</class>
+    <class>eapli.base.meetingmanagement.domain.Meeting</class>
+    <class>eapli.base.invitationmanagement.domain.Invitation</class>
+    <class>eapli.base.exams.domain.Exam</class>
+    <class>eapli.base.questionmanagement.domain.Question</class>
+    <class>eapli.base.board.domain.Board</class>
+    <class>eapli.base.board.domain.Cell</class>
+    <class>eapli.base.formativeexams.domain.FormativeExam</class>
+    <class>eapli.base.usermanagement.domain.MeetingOwner</class>
+    <class>eapli.base.usermanagement.domain.BoardOwner</class>
+    <class>eapli.base.boardhistory.domain.BoardHistory</class>
+    <class>eapli.base.boardhistory.domain.Task</class>
+    <class>eapli.base.boardparticipantmanagement.domain.BoardParticipant</class>
+    <class>eapli.base.postitmanager.domain.PostIt</class>
+    <class>eapli.base.exams.domain.ExamResolution</class>
+
+    <properties>
+      <!--<property name="javax.persistence.jdbc.url" value="jdbc:h2:tcp://localhost/~/base"/>-->
+      <property name="javax.persistence.jdbc.url" value="jdbc:h2:tcp://vsgate-s2.dei.isep.ipp.pt:10747/base;MV_STORE=FALSE;AUTO_SERVER=true;"/>
+
+      <property name="javax.persistence.jdbc.user" value="sa"/>
+      <property name="javax.persistence.jdbc.password" value="eapli"/>
+      <property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
+      <!-- <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/> -->
+      <!-- <property name="eclipselink.logging.level" value="FINE"/> -->
+      <!-- <property name = "hibernate.show_sql" value = "true" /> -->
+      <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+
+    </properties>
+  </persistence-unit>
+</persistence>

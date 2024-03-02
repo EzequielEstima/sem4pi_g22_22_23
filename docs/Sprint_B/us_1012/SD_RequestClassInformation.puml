@@ -1,0 +1,86 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor Teacher
+
+participant "RescheduleClassUI" as UI <<application>>
+participant "RescheduleClassController" as Controller <<application>>
+participant "RescheduleClassService" as Service <<application>>
+
+
+
+
+participant "ClassMapper" as ClassMapper<<mapper>>
+participant "BuilderDTOClass" as BuilderDTOClass<<DTO>>
+participant "ClassDTO" as ClassDTO<<DTO>>
+participant "PersistenceContext" as Persistence <<persistence>>
+participant "RepositoryFactory" as Factory <<factory>>
+
+database "ClassRepository" as Repository <<repository>>
+
+activate Teacher
+activate UI
+
+Teacher -> UI : wants to reschedule a class
+UI -> Controller : requestInformation()
+activate Controller
+Controller -> Service : requestInformation()
+activate Service
+Service -> Persistence: repositories()
+activate Persistence
+Persistence -> Factory: create
+Persistence -> Service: factory
+deactivate Persistence
+Service -> Factory: classes()
+activate Factory
+Factory -> Repository: create
+Factory -> Service: userRepository
+deactivate Factory
+
+Service -> Repository : getListOfClasses()
+Repository -> Service : classesList
+
+loop for each class
+Service -> ClassMapper : toDTOWithDateAndDuration(classe)
+activate ClassMapper
+ClassMapper -> BuilderDTOClass : toDTOWithDateAndDuration(classe.returnDates(),classe.returnDuration())
+activate BuilderDTOClass
+BuilderDTOClass -> ClassDTO : create
+ClassDTO -> BuilderDTOClass : ClassWithWeeklyDateDTO
+BuilderDTOClass -> ClassMapper : ClassWithWeeklyDateDTO
+deactivate BuilderDTOClass
+ClassMapper -> Service : ClassWithWeeklyDateDTO
+deactivate ClassMapper
+Service -> Service : classWithWeeklyDateListDTO.add(ClassWithWeeklyDateDTO)
+end
+
+loop for each class
+Service -> ClassMapper : toDTOWithIdAndTittle(classe)
+activate ClassMapper
+ClassMapper -> BuilderDTOClass : toDTOWithIdAndTittle(classe.returnId(),classe.returnTittle())
+activate BuilderDTOClass
+BuilderDTOClass -> ClassDTO : create
+ClassDTO -> BuilderDTOClass : classWithIdAndTittleDTO
+BuilderDTOClass -> ClassMapper : classWithIdAndTittleDTO
+deactivate BuilderDTOClass
+ClassMapper -> Service : classWithIdAndTittleDTO
+deactivate ClassMapper
+Service -> Service : classWithIdAndTittleListDTO.add(classWithIdAndTittleDTO)
+
+end
+
+Service -> Controller : Pair<List<ClassWithWeeklyDateDTO>, List<ClassWithIdAndTittleDTO>>
+
+deactivate Service
+Controller -> UI : Pair<List<ClassWithWeeklyDateDTO>, List<ClassWithIdAndTittleDTO>>
+deactivate Controller
+
+
+
+
+
+
+UI -> Teacher : ask to choose a class to reeschedule
+@enduml

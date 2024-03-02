@@ -1,0 +1,181 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class "MeetingUI" as MeetUI <<presentation>>
+class "MeetingController" as MeetController <<application>>
+
+class "ScheduleMeetingService" as ScheduleMeetService <<application>>
+class "ListPersonService" as PersonService <<application>>
+class "AvailableMeetingDateService" as MeetingService <<application>>
+class "AvailableClassDateService" as ClassService <<application>>
+class "AvailableExtraClassDateService" as ExtraService <<application>>
+
+class "PersonBuilder" as PerBuilder <<builder>>
+class "MeetingBuilder" as MeetBuilder <<builder>>
+class "EmailAddress" as Email <<domain>>
+class "Person" as Person <<domain>>
+class "Meeting" as Meet <<domain>>
+
+class "PersistenceContext" as Persistence <<persistence>>
+class "RepositoryFactory" as RepositoryFactory <<factory>>
+
+class "PersonRepository" as PersonRepository <<repository>>
+class "MeetingRepository" as MeetRepository <<repository>>
+class "ClassRepository" as ClassRepository <<repository>>
+class "ExtraClassRepository" as ExtraRepository <<repository>>
+
+MeetUI --> MeetController
+MeetController --> ScheduleMeetService
+
+ScheduleMeetService --> PersonService
+ScheduleMeetService --> MeetingService
+ScheduleMeetService --> ClassService
+ScheduleMeetService --> ExtraService
+
+PersonService --> PerBuilder
+PersonService --> Persistence
+PersonService --> RepositoryFactory
+PersonService --> PersonRepository
+
+MeetingService --> MeetBuilder
+MeetingService --> Persistence
+MeetingService --> RepositoryFactory
+MeetingService --> MeetRepository
+
+ClassService --> Persistence
+ClassService --> RepositoryFactory
+ClassService --> ClassRepository
+
+ExtraService --> Persistence
+ExtraService --> RepositoryFactory
+ExtraService --> ExtraRepository
+
+Persistence --> RepositoryFactory
+
+PersonRepository --> Person
+MeetRepository --> Meet
+ClassRepository --> Class
+ExtraRepository --> ExtraClass
+
+PerBuilder --> Person
+PerBuilder --> Email
+
+class MeetUI{
++ theController : MeetingController
+- doShow() : void
+}
+
+Class MeetController{
++ theService : ScheduleMeetingService
+- verifyMeetingData(data) : boolean
+- scheduleMeeting(data) : boolean
+}
+
+class ScheduleMeetService{
++ thePersonService : ListPersonService
++ theMeetingService : AvailableMeetingDateService
++ theClassService : AvailableClassDateService
++ theExtraClassService : AvailableExtraClassDateService
+- verifyMeetingData(data) : boolean
+- scheduleMeeting(data) : boolean
+- checkMatchesBetweenDates(List<Date>, List<Date>, List<Date>) : boolean
+}
+
+class PersonService{
++ thePersonBuilder : PersonBuilder
++ persistence : PersistenceContext
++ factory : RepositoryFactory
++ usersRepository : PersonRepository
+- getPersonsByEmail(string) : List<Person>
+}
+class MeetingService{
++ theMeetingBuilder : MeetingBuilder
++ persistence : PersistenceContext
++ factory : RepositoryFactory
++ meetingsRepository : MeetingRepository
+- getMeetingDates(List<Person>) : Map<Person, List<Date>>
+- createMeeting(data) : boolean
+}
+class ClassService{
++ persistence : PersistenceContext
++ factory : RepositoryFactory
++ classesRepository : ClassRepository
+- getClassDates(List<Person>) : Map<Person, List<Date>>
+}
+class ExtraService{
++ persistence : PersistenceContext
++ factory : RepositoryFactory
++ extraClassesRepository : ExtraClassRepository
+- getExtraClassDates(List<Person>) : Map<Person, List<Date>>
+}
+
+class PerBuilder{
++ Email
+- build(emails) : Email
+}
+
+class PersonRepository{
+- findAllPersonsWhoMatch(emails) : List<Person>
+}
+
+class Person {
++ fullName : FullName
++ systemUser: SystemUser
++ id : ID_Person
+}
+
+class Email {
++ string email
+}
+
+class MeetRepository {
+- findAllMeetingsWhoMatch(List<Person>, Date) : Map<Person, List<Date>>
+}
+
+class Meet {
++ id : ID_Meeting
++ date : Date
++ invitations : List<Invitation>
+}
+
+class MeetBuilder{
++ meeting : Meeting
++ invitation : List<Invitation>
++ scheduledDate : ScheduledDate
+- build(data) : Meeting
+- buildInvitation(data) : List<Invitation>
+- buildScheduledDate(data) : ScheduledDate
+}
+
+class ClassRepository {
+- findAllClassesWhoMatch(List<Person>, Date) : Map<Person, List<Date>>
+}
+
+class Class{
++ id : ID_Class
++ classTitle : ClassTitle
++ date : WeeklyDate
++ course : Course
+}
+
+class ExtraRepository {
+- findAllExtraClassesWhoMatch(List<Person>, Date) : Map<Person, List<Date>>
+}
+
+class ExtraClass{
++ id : ID_ExtraClass
++ date : ScheduledDate
+}
+
+class Persistence{
+ - repositories() : RepositoryFactory
+}
+
+class RepositoryFactory{
+ - users() : PersonRepository
+ - meetings() : MeetingRepository
+ - classes() : ClassRepository
+ - extraClasses() : ExtraClassRepository
+}
+
+@enduml

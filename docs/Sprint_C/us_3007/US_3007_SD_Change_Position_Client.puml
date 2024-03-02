@@ -1,0 +1,35 @@
+@startuml
+autonumber
+title ChangePostItPosition - SharedBoardClient
+
+actor "User" as User
+
+participant "ChangePostItPositionUI" as UI <<ShareBoardClient>> <<Presentation>>
+participant "SBPMessageFormat" as SBPF
+participant "DataOutputStream" as DOS
+participant "DataInputStream" as DIS
+activate User
+User -> UI : chooses boardTitle , post-it and new position
+activate UI
+
+UI -> UI : sendChangePostItPositionRequest(boardTitle, oldRow, oldColumn, newRow, newColumn)
+activate UI
+UI -> SBPF : createChangePostItPositionRequest(boardTitle, oldRow, oldColumn, newRow, newColumn)
+activate SBPF
+return changePostItPositionRequest
+UI -> DOS : create(socket)
+activate DOS
+deactivate DOS
+UI -> DIS : create(socket)
+activate DIS
+deactivate DIS
+UI -> DOS : writeUTF(changePostItPositionRequest)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return true
+return informs operation success
+deactivate UI
+@enduml

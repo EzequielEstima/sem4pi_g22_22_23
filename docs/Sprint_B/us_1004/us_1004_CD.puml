@@ -1,0 +1,86 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+class OpenCloseCourseUI <<Presentation>>{
+    + doShow()
+}
+class OpenCloseCourseController <<Controller>>{
+    - openCloseCourseService
+    + listOpenableClosableCourses()
+    + changeCourseStatus(courseDTO : CourseDTOWithIdTitleStatus, newStatus : String)
+}
+
+class OpenCloseCourseService  <<Service>> {
+    - courseRepository : CourseRepository
+    + listOpenableClosableCourses()
+    + changeCourseStatus(courseDTO : CourseDTOWithIdTitleStatus, newStatus : String)
+}
+class PersistenceContext  <<persistence>> {
+    + repositories()
+}
+Interface RepositoryFactory  <<factory>> {
+    + courseRepository()
+}
+class CourseRepository  <<repository>> {
+    + listOpenableClosableCourses()
+    + ofIdentity(courseId : CourseIdentifier)
+}
+class Course <<Domain>> {
+    - id : CourseIdentifier
+    - courseTitle : CourseTitle
+    - courseName : CourseName
+    - enrollmentLimits : EnrollmentLimits
+    - courseStatus : CourseStatus
+    - description : Description
+    + changeStatus(newStatus : String)
+    + returnCourseTitleString()
+    + returnCourseIdentifierString()
+    + returnCourseStatusString()
+}
+class CourseTitle <<Domain>>{
+    - course_title : String
+    + returnCourseTitleString()
+}
+
+class CourseIdentifier <<Domain>>{
+    - course_id : String
+    + returnCourseIdentifierString()
+}
+
+class CourseStatus <<Domain>>{
+    - courseStatusValue : CourseStatusValue
+    + returnCourseStatusString()
+}
+class CourseDTOWithIdTitleStatus <<DTO>> {
+    + courseIdentifier : String
+    + CourseTitle : String
+    + state : String
+}
+class CourseMapper <<DTO>> {
+    + toDTOWithIdTitleStatus(course : Course)
+}
+
+class CourseDTOBuilder <<Builder>> {
+    + withCourseIdentifier(courseIdentifier : String)
+    + withCourseTitle(courseTitle : String)
+    + withCourseStatus(courseStatus : String)
+    + buildWithIdTitleStatus()
+}
+
+
+OpenCloseCourseUI ..> OpenCloseCourseController
+OpenCloseCourseController ..> OpenCloseCourseService
+OpenCloseCourseService ..> PersistenceContext
+PersistenceContext ..> RepositoryFactory
+OpenCloseCourseService ..> CourseRepository
+OpenCloseCourseService ..> CourseMapper
+CourseMapper ..> CourseDTOBuilder
+CourseDTOBuilder ..> CourseDTOWithIdTitleStatus
+OpenCloseCourseService ..> Course
+Course -left> CourseTitle
+Course -down> CourseIdentifier
+Course -right> CourseStatus
+
+
+@enduml

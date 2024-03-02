@@ -1,0 +1,89 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+actor Student as std
+
+
+participant "ListStudentGradesUI" as ui <<Presentation>>
+participant "ListStudentGradesController" as ctrl <<Application>>
+participant "ListStudentGradesService" as service <<Service>>
+
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+
+participant PersistenceContext as persistence <<persistence>>
+participant RepositoryFactory as repFactory <<factory>>
+
+participant ExamResolutionDTOWithExamTitleGradeMapper as ma <<DTO>>
+participant ExamResolutionDTOExamTitleGradeBuilder as builder <<DTO>>
+participant ExamResolutionDTOExamTitleGrade as dto <<DTO>>
+
+database ExamResolution as examRep <<Repository>>
+
+activate std
+std-> ui : list my grades
+activate ui
+ui -> ctrl: create
+ui -> ctrl: listMyGrades()
+activate ctrl
+ctrl -> service: listMyGrades()
+activate service
+
+service -> auth: authorizationService()
+activate auth
+auth --> service: authz
+deactivate auth
+service -> authSV: session()
+activate authSV
+authSV --> service: userSession
+deactivate authSV
+service -> userSe: authenticatedUser()
+activate userSe
+userSe --> service : systemUser
+deactivate userSe
+
+
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create()
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: ExamResolutionRepository()
+activate repFactory
+repFactory -> examRep: create()
+repFactory --> service: examResolutionRepository
+deactivate repFactory
+service-> examRep: findStudentGrades(systemUser)
+activate examRep
+examRep --> service: listExamResolution
+deactivate examRep
+
+alt for each examResolution in listExamResolution
+service -> ma : toDto(examResolution)
+activate ma
+ma -> builder : create()
+ma -> builder : withExamTitleGrade(examTitle,grade)
+ma -> builder : build()
+activate builder
+builder -> dto: create(examTitle,grade)
+activate dto
+dto --> builder: examResolutionDTOExamTitleGrade
+deactivate dto
+builder --> ma : examResolutionDTOExamTitleGrade
+deactivate builder
+ma -->service : examResolutionDTOExamTitleGrade
+deactivate ma
+end
+
+service --> ctrl: listExamResolutionDTO
+deactivate service
+ctrl --> ui: listExamResolutionDTO
+deactivate ctrl
+ui --> std : Show list of grades
+deactivate ui
+deactivate std
+
+
+@enduml

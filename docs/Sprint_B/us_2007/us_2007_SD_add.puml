@@ -1,0 +1,72 @@
+@startuml
+autonumber
+title Add Question
+
+actor "Teacher" as T
+
+participant ": AddQuestionUI" as UI <<Presentation>>
+control "ListCourseController" as CTRL <<Application>>
+participant "ListCourseService" as LCS <<Application>>
+participant ": AddUpdateQuestionService" as AUQS <<Service>>
+participant ": QuestionBuilder" as QB <<Builder>>
+participant ": VerifyQuestionService" as VQS <<Service>>
+participant ": Question" as Q <<Domain>>
+participant ": Course" as C <<Domain>>
+database ": CourseRepository" as CR <<Domain>>
+database QuestionRepository as QR <<Repository>>
+
+activate T
+T -> UI : chooses the course, and the question path file
+activate UI
+
+UI -> CTRL : addQuestion(courseDTO, questionStructure)
+activate CTRL
+
+CTRL -> AUQS : addQuestion(courseDTO, questionStructure)
+activate AUQS
+
+AUQS -> QR : findMaxId()
+activate QR
+QR --> AUQS : maxId
+deactivate QR
+AUQS -> QB : withStructure(questionStructure)
+activate QB
+QB -> VQS : verifyQuestion(structure)
+activate VQS
+VQS --> QB : true
+deactivate VQS
+QB --> AUQS : questionBuilder
+deactivate QB
+AUQS -> QB : withIdentifier(id)
+activate QB
+QB --> AUQS : questionBuilder
+deactivate QB
+AUQS -> QB : build()
+activate QB
+
+QB -> Q : create(structure, id)
+activate Q
+
+deactivate Q
+QB --> AUQS : question
+deactivate QB
+AUQS -> CR : findCourseByCourseId(courseDTO.courseIdentifier)
+activate CR
+CR --> AUQS : course
+deactivate CR
+AUQS -> C : addQuestion(question)
+activate C
+C --> AUQS : true
+deactivate C
+AUQS -> QR : save(question)
+activate QR
+deactivate QR
+AUQS -> CR : save(course)
+activate CR
+deactivate CR
+deactivate AUQS
+deactivate CTRL
+
+UI--> T : informs operation success
+
+@enduml

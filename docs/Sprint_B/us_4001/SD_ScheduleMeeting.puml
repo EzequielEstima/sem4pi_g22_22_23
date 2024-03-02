@@ -1,0 +1,60 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor Person
+
+participant "ScheduleMeetingUI" as MeetUI <<presentation>>
+participant "ScheduleMeetingController" as MeetController <<application>>
+participant "ScheduleMeetingService" as ScheduleMeetService <<application>>
+
+participant "MeetingFactory" as MeetFactory <<factory>>
+participant "MeetingFactory" as MeetOwnerFactory <<factory>>
+
+participant "Email" as Email <<domain>>
+participant "Meeting" as Meet <<domain>>
+participant "MeetingOwner" as MeetOwner <<Domain>>
+
+participant "PersistenceContext" as Persistence <<persistence>>
+participant "RepositoryFactory" as RepositoryFactory <<factory>>
+
+activate Person
+activate MeetUI
+
+Person -> MeetUI : yes
+MeetUI -> MeetController: scheduledMeeting(List<String> emails, Date date, int duration)
+activate MeetController
+MeetController -> ScheduleMeetService: scheduleMeeting(List<String> emails, Date date, int duration)
+activate ScheduleMeetService
+
+ScheduleMeetService -> MeetFactory: build(Data)
+activate MeetFactory
+MeetFactory -> Meet: (Data)
+Meet -> MeetFactory: meeting
+
+MeetFactory -> ScheduleMeetService: meeting
+deactivate MeetFactory
+ScheduleMeetService -> MeetRepository: save(meeting)
+
+ScheduleMeetService -> MeetOwnerFactory: build(Data)
+activate MeetOwnerFactory
+MeetOwnerFactory -> MeetOwner: (Data)
+MeetOwner -> MeetOwnerFactory: meetingOwner
+MeetOwnerFactory -> ScheduleMeetService : meetingOwner
+deactivate
+
+
+ScheduleMeetService -> ScheduleMeetService: true
+ScheduleMeetService -> MeetController: true
+deactivate ScheduleMeetService
+MeetController -> MeetUI: true
+deactivate MeetController
+MeetUI -> Person: prints success message
+
+
+deactivate MeetUI
+deactivate Person
+deactivate MeetController
+
+@enduml

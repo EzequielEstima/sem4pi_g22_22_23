@@ -1,0 +1,65 @@
+@startuml
+autonumber
+
+
+participant ": ListFutureExamsService" as FESS <<Service>>
+
+participant ": ExamDTOWithDatesCourseIdMapper" as EM <<DTO>>
+participant ": ExamDTOWithDatesCourseIdBuilder" as EB <<Builder>>
+participant ": Exam" as E <<Domain>>
+participant ": Course" as C <<Domain>>
+participant ": DateInterval" as DI <<Domain>>
+participant ": CourseIdentifier" as CI <<Domain>>
+participant ": ExamDTOWithDatesCourseId" as EDTO <<DTO>>
+
+[o-> EM : toDTO(exam, course)
+activate EM
+EM -> EB : create()
+activate EB
+deactivate EB
+EM -> E : returnInitialDate()
+activate E
+E -> DI : returnInitialDate()
+activate DI
+DI --> E : initialDate
+deactivate DI
+E --> EM : initialDate
+deactivate E
+EM -> EB : withInitialDate(initialDate)
+activate EB
+EB --> EM : examBuilder
+deactivate EB
+EM -> E : returnFinalDate()
+activate E
+E -> DI : returnFinalDate()
+activate DI
+DI --> E : finalDate
+deactivate DI
+E --> EM : finalDate
+deactivate E
+EM -> EB : withFinalDate(initialDate)
+activate EB
+EB --> EM : examBuilder
+deactivate EB
+EM -> C : returnCourseIdentifierString()
+activate C
+C -> CI : returnCourseIdentifierString()
+activate CI
+CI --> C : courseIdentifier
+deactivate CI
+C --> EM : courseIdentifier
+deactivate C
+EM -> EB : withCourseIdentifier(courseIdentifier)
+activate EB
+EB --> EM : examBuilder
+deactivate EB
+EM -> EB : build()
+activate EB
+EB -> EDTO : create(initialDate, finalDate, courseIdentifier)
+activate EDTO
+deactivate EDTO
+EB --> EM : examDTO
+deactivate EB
+EM -->o[ : examDTO
+deactivate EM
+@enduml

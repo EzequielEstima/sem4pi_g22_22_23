@@ -1,0 +1,125 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "VerifyIfExistAClassAtTheTimeForClassController" as ctrl <<application>>
+
+participant VerifyIfExistAClassControllerForCourseService as service <<application>>
+participant PersistenceContext as Persistence <<persistence>>
+participant RepositoryFactory as RepFactory <<factory>>
+participant CourseIdentifier as courseID <<domain>>
+
+
+participant Course as course <<domain>>
+
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+
+
+database CourseRepository as courseRep <<repository>>
+database TeacherRepository as teaRep <<repository>>
+database StudentRepository as stdRep <<repository>>
+
+activate ctrl
+
+ctrl -> service: verifyIfExistAClassAtTheTime(startingDateWithTime. duration, courseDTO)
+activate service
+
+service -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence --> service: factory
+deactivate Persistence
+service -> RepFactory: courseRepository()
+activate RepFactory
+RepFactory -> courseRep: create
+RepFactory --> service: courseRepository
+deactivate RepFactory
+
+service -> courseID : create(courseIdentifier)
+service -> courseRep: ofIdentity(courseId)
+activate courseRep
+courseRep --> service : course
+deactivate courseRep
+
+
+service -> course: verifyIfExistAClassAtTheTime(startingDateWithTime, duration)
+activate course
+note right : Check The SD_VerifyIfExistAClassAtTheTime \n for more information
+course --> service: boolean
+deactivate course
+
+service -> course: verifyIfExistAnExtraClassAtTheTime(startingDateWithTime, duration)
+activate course
+note right : Check The SD_VerifyIfExistAExtraClassAtTheTime \n for more information
+course --> service: boolean
+deactivate course
+
+service -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence --> service: factory
+deactivate Persistence
+service -> RepFactory: teacherRepository()
+activate RepFactory
+RepFactory -> teaRep: create
+RepFactory --> service: teacherRepository
+deactivate RepFactory
+
+
+service -> auth: authorizationService()
+activate auth
+auth -> service: authz
+deactivate auth
+service -> authSV: session()
+activate authSV
+authSV --> service: userSession
+deactivate authSV
+service -> userSe: authenticatedUser()
+activate userSe
+userSe --> service : systemUser
+deactivate userSe
+
+service -> teaRep : findTeacherBySystemUser(systemUser)
+activate teaRep
+teaRep --> service : teacher
+deactivate teaRep
+
+service -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence --> service: factory
+deactivate Persistence
+service -> RepFactory: studentRepository()
+activate RepFactory
+RepFactory -> stdRep: create
+RepFactory --> service: studentRepository
+deactivate RepFactory
+service -> stdRep : findStudentsInACourse(course)
+activate stdRep
+stdRep --> service : listStudent
+deactivate stdRep
+
+service -> courseRep : findAllCourseRelatedWithTheMembersOfAGivenCourse(listStudent,listTeacher)
+activate courseRep
+courseRep --> service : listCourse
+deactivate courseRep
+
+loop for each Course in listCourse
+service -> course: verifyIfExistAClassAtTheTime(startingDateWithTime, duration)
+activate course
+note right : Check The SD_VerifyIfExistAClassAtTheTime \n for more information
+course --> service: boolean
+deactivate course
+
+service -> course: verifyIfExistAnExtraClassAtTheTime(startingDateWithTime, duration)
+activate course
+note right : Check The SD_VerifyIfExistAExtraClassAtTheTime \n for more information
+course --> service: boolean
+deactivate course
+end
+service --> ctrl: boolean
+deactivate service
+@enduml

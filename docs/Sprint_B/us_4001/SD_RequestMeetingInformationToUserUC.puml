@@ -1,0 +1,186 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+autonumber
+
+actor Person
+
+participant "ScheduleMeetingUI" as MeetUI <<presentation>>
+participant "ScheduleMeetingController" as MeetController <<application>>
+participant "ScheduleMeetingService" as ScheduleMeetService <<application>>
+
+
+participant "MeetingFactory" as MeetFactory <<factory>>
+participant "Email" as Email <<domain>>
+participant "Meeting" as Meet <<domain>>
+participant "Person" as Per <<Domain>>
+participant "Class" as Class <<Domain>>
+participant "ExtraClass" as ExtraClass <<Domain>>
+
+
+participant "PersistenceContext" as Persistence <<persistence>>
+participant "RepositoryFactory" as RepositoryFactory <<factory>>
+
+database "PersonRepository" as PersonRepository <<repository>>
+database "MeetingRepository" as MeetRepository <<repository>>
+database "CourseRepository" as CourseRepository <<repository>>
+database "ClassRepository" as ClassRepository <<repository>>
+database "ExtraClassRepository" as ExtraRepository <<repository>>
+
+activate Person
+activate MeetUI
+
+Person -> MeetUI : wants to schedule a meeting
+loop until meeting owner doesn't want to add more participants
+MeetUI -> Person : ask email of participant
+Person -> MeetUI : enters email
+MeetUI -> Person : ask if owner wants to add more participants
+Person -> MeetUI : enters yes or no
+end
+
+MeetUI -> Person : ask meeting date
+Person -> MeetUI : enters date
+
+
+
+MeetUI -> MeetController : verifyMeeting(Data)
+activate MeetController
+MeetController -> ScheduleMeetService :verifyMeetingData(Data)
+activate ScheduleMeetService
+ScheduleMeetService -> ScheduleMeetService: getPersonsByEmail()
+
+activate ScheduleMeetService
+
+ScheduleMeetService -> Email : create
+Email -> ScheduleMeetService : emails
+
+
+ScheduleMeetService -> Persistence: PersistenceContext.repositories()
+activate Persistence
+Persistence -> RepositoryFactory: create
+Persistence -> ScheduleMeetService: factory
+deactivate Persistence
+ScheduleMeetService -> "RepositoryFactory": users()
+activate RepositoryFactory
+RepositoryFactory -> PersonRepository: create
+RepositoryFactory -> ScheduleMeetService: userRepository
+deactivate RepositoryFactory
+ScheduleMeetService -> PersonRepository: findAllPersonsWhoMatch(emails)
+PersonRepository -> ScheduleMeetService: personsList
+
+ScheduleMeetService -> ScheduleMeetService: personsList
+
+deactivate ScheduleMeetService
+
+
+ScheduleMeetService -> ScheduleMeetService : verifyIfExistAMeeting(List<Person>, java.util.Date, int)
+
+activate ScheduleMeetService
+
+ScheduleMeetService -> "RepositoryFactory": meetings()
+activate RepositoryFactory
+RepositoryFactory -> MeetRepository: create
+RepositoryFactory -> ScheduleMeetService: meetingRepository
+deactivate RepositoryFactory
+ScheduleMeetService -> MeetRepository: findAllMeetingsWhoMatch(personList);
+MeetRepository -> ScheduleMeetService: meetingsList
+ScheduleMeetService -> Meet : verifyIfIsTheMeetingDate(utilDate,duration)
+Meet -> ScheduleMeetService : false
+ScheduleMeetService -> ScheduleMeetService: false
+
+deactivate ScheduleMeetService
+
+
+ScheduleMeetService -> ScheduleMeetService: verifyIfExistAClass(List<Person> people, Date utilDate, int duration)
+
+activate ScheduleMeetService
+
+
+ScheduleMeetService -> CourseRepository : courses()
+CourseRepository -> ScheduleMeetService : courseRepository
+loop
+ScheduleMeetService -> CourseRepository : findStudentInACourses(student)
+CourseRepository -> ScheduleMeetService : course
+ScheduleMeetService -> ScheduleMeetService : courseList.add(course)
+end
+
+
+ScheduleMeetService -> "RepositoryFactory": classes()
+activate RepositoryFactory
+RepositoryFactory -> ClassRepository: create
+RepositoryFactory -> ScheduleMeetService: classRepository
+deactivate RepositoryFactory
+loop
+ScheduleMeetService -> ClassRepository: findClassesInACourse(course)
+ClassRepository -> ScheduleMeetService: classes
+ScheduleMeetService -> ScheduleMeetService: classesList.add(classes)
+
+end
+loop
+ ScheduleMeetService -> Per : isATeacher()
+ ScheduleMeetService -> ClassRepository : findAllClassesByTeacher(teachers)
+ ClassRepository -> ScheduleMeetService : teacherClasses.add(classes)
+ end
+
+ loop
+ ScheduleMeetService -> ExtraClass : verifyIfAClassAtTheTime(teacherClasses)
+ ExtraClass -> ScheduleMeetService : false
+ ScheduleMeetService -> ExtraClass : verifyIfAClassAtTheTime(classesList)
+ ExtraClass -> ScheduleMeetService : false
+ end
+
+ ScheduleMeetService -> ScheduleMeetService : false
+
+ deactivate ScheduleMeetService
+
+ScheduleMeetService -> ScheduleMeetService: verifyIfExistAExtraClass(List<Person> people, Date utilDate, int duration)
+
+activate ScheduleMeetService
+
+ ScheduleMeetService -> CourseRepository : courses()
+ CourseRepository -> ScheduleMeetService : courseRepository
+ loop
+ ScheduleMeetService -> CourseRepository : findStudentInACourses(student)
+ CourseRepository -> ScheduleMeetService : course
+ ScheduleMeetService -> ScheduleMeetService : courseList.add(course)
+ end
+
+
+ ScheduleMeetService -> "RepositoryFactory": extraClasses()
+ activate RepositoryFactory
+ RepositoryFactory -> ExtraRepository: create
+ RepositoryFactory -> ScheduleMeetService: extraClassRepository
+ deactivate RepositoryFactory
+ loop
+ ScheduleMeetService -> ExtraRepository: findExtraClassesInACourse(course)
+ ExtraRepository -> ScheduleMeetService: extraClasses
+ ScheduleMeetService -> ScheduleMeetService: extraClassesList.add(extraClasses)
+ end
+
+loop
+ ScheduleMeetService -> Per : isATeacher()
+ ScheduleMeetService -> ExtraRepository : findAllExtraClassesByTeacher(teachers)
+ ExtraRepository -> ScheduleMeetService : teacherExtraClasses.add(extraClasses)
+ end
+
+ loop
+ ScheduleMeetService -> ExtraClass : verifyIfAClassAtTheTime(teacherClasses)
+ ExtraClass -> ScheduleMeetService : false
+ ScheduleMeetService -> ExtraClass : verifyIfAClassAtTheTime(extraClassesList)
+ ExtraClass -> ScheduleMeetService : false
+ end
+
+ ScheduleMeetService -> ScheduleMeetService : false
+
+ deactivate ScheduleMeetService
+
+
+
+
+ScheduleMeetService -> MeetController: true
+deactivate ScheduleMeetService
+MeetController -> MeetUI: true
+deactivate MeetController
+MeetUI -> Person: The system asks if he wants to continue (if not the program ends) if yes the program continues
+
+@enduml

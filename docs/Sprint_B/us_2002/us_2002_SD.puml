@@ -1,0 +1,64 @@
+@startuml
+autonumber
+actor "Student" as S
+
+participant ": ListFutureExamsUI" as UI <<Presentation>>
+control "ListFutureExamsController" as CTRL <<Application>>
+participant ": ListFutureExamsService" as FESS <<Service>>
+
+participant " : AuthzRegistry" as AR <<Application>>
+participant " : AuthorizationService" as AS <<Service>>
+participant " : UserSession" as US <<Application>>
+database CourseRepository as CR <<Repository>>
+database ExamRepository as ER <<Repository>>
+participant ": ExamDTOWithDatesCourseIdMapper" as EM <<DTO>>
+
+
+activate S
+S -> UI : Student asks to list its own exams
+activate UI
+UI->CTRL : listFutureExams()
+activate CTRL
+CTRL-> FESS : listFutureExams()
+activate FESS
+
+FESS -> AR: authorizationService()
+activate AR
+AR -> FESS: authz
+deactivate AR
+FESS -> AS: session()
+activate AS
+AS --> FESS: userSession
+deactivate AS
+FESS -> US: authenticatedUser()
+activate US
+US --> FESS : systemUser
+deactivate US
+FESS --> CR : listAcceptedCoursesByStudent(user)
+activate CR
+CR --> FESS : courseList
+deactivate CR
+loop foreach course in courseList
+FESS -> ER : listFutureExamsByCourse(course)
+activate ER
+ER --> FESS : futureExamsList
+deactivate ER
+deactivate ER
+loop foreach exam from futureExamList
+FESS -> EM : toDTO(exam, course)
+activate EM
+
+EM --> FESS : examDTO
+deactivate EM
+end loop
+end loop
+FESS --> CTRL : examDTOList
+deactivate FESS
+CTRL --> UI : examDTOList
+deactivate CTRL
+
+UI --> S : shows all future exams referent to the Student
+deactivate UI
+deactivate S
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor Teacher
+
+participant "formativeUI" as UI <<presentation>>
+participant "formativeController" as Controller <<application>>
+participant "formativeService" as Service <<application>>
+
+participant "PersistenceContext" as Persistence <<persistence>>
+participant "RepositoryFactory" as Factory <<factory>>
+
+participant "FormativeExamFactory" as FormativeExamFactory <<factory>>
+
+participant "Question" as Question <<domain>>
+participant "FormativeExams" as FormativeExams <<domain>>
+
+database "QuestionRepository" as QuestionRepository <<repository>>
+database "FormativeExamsRepository" as FormativeExamsRepository <<repository>>
+
+activate Teacher
+activate UI
+
+Teacher -> UI: wants to create a formative exam
+UI -> Controller: createFormativeExam(String questions, int number)
+activate Controller
+Controller -> Service: createFormativeExam(String questions, int number)
+activate Service
+Service -> Persistence: repositories()
+activate Persistence
+Persistence -> Factory: create
+Persistence -> Service: factory
+deactivate Persistence
+Service -> Factory: questions()
+activate Factory
+Factory -> QuestionRepository : create
+Factory -> Service: questionsRepository
+deactivate Factory
+Service -> QuestionRepository: findAll()
+Service -> Service : verify question types
+Service -> FormativeExamFactory: build(data)
+activate FormativeExamFactory
+FormativeExamFactory -> FormativeExams: create
+FormativeExams -> FormativeExamFactory: formativeExam
+FormativeExamFactory -> Service: formativeExam
+deactivate FormativeExamFactory
+Service -> FormativeExamsRepository: save(formativeExam)
+Service -> Controller: true
+deactivate Service
+Controller -> UI: true
+deactivate Controller
+UI-> Teacher: success message
+deactivate UI
+
+
+
+@enduml

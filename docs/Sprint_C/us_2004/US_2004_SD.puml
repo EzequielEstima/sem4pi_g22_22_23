@@ -1,0 +1,46 @@
+@startuml
+autonumber
+actor Student as ACTOR
+participant TakeExamUI as UI <<presentation>>
+control TakeExamController as CONTROLLER <<application>>
+participant TakeExamService as SERVICE <<application>>
+participant EvaluateExamResolutionService as DOM_SERVICE <<service>>
+participant ExamResolution as EX_RES <<domain>>
+database ExamResolutionRepository as EX_RES_REPO <<repository>>
+database ExamRepository as EX_REPO <<repository>>
+
+ACTOR -> UI: Inserts exam and file path to respective
+activate ACTOR
+activate UI
+UI -> CONTROLLER : takeExam(examId, resolutionFilePath)
+activate CONTROLLER
+CONTROLLER -> SERVICE : takeExam(examId, resolutionFilePath)
+activate SERVICE
+
+SERVICE -> EX_REPO : ofIdentity(examId)
+activate EX_REPO
+EX_REPO --> SERVICE : exam
+deactivate EX_REPO
+
+SERVICE -> DOM_SERVICE : takeExam(resolution)
+activate DOM_SERVICE
+DOM_SERVICE -> SERVICE : grade and feedback
+deactivate DOM_SERVICE
+
+SERVICE -> EX_RES : create(examResId, exam, grade, student)
+activate EX_RES
+EX_RES --> SERVICE : newExamResolution
+deactivate EX_RES
+
+SERVICE -> EX_RES_REPO : save(newExamResolution)
+activate EX_RES_REPO
+deactivate EX_RES_REPO
+
+SERVICE --> CONTROLLER : grade and feedback
+deactivate SERVICE
+CONTROLLER --> UI : grade and feedback
+deactivate CONTROLLER
+UI --> ACTOR : grade and feedback
+deactivate UI
+deactivate ACTOR
+@enduml

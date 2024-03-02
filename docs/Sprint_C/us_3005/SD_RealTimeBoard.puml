@@ -1,0 +1,91 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor user
+
+participant "ViewInRealTimeUI" as ui <<ShareBoardClient>> <<Presentation>>
+participant "ServerSocket" as ss
+participant "ViewInRealTimeRequest" as request
+participant "Socket" as s
+participant "SBPMessageFormat" as sbpf
+participant "DataOutputStream" as dos
+participant "DataInputStream" as dis
+participant "HTTPmessage" as message
+
+activate user
+
+user -> ui: selects the board, ip, the port and asks to view updates
+activate ui
+
+
+ui -> ss: create(port,50,ip)
+activate ss
+return sock
+ui -> ss: accept()
+activate ss
+return cliSocket
+
+ui -> request : create(cliSocket, BaseFolder, boardId, socketServer)
+ui -> request : start()
+activate request
+
+request -> s : create(clientIp,5000)
+activate s
+return socketServerClone
+
+request -> dos: create
+activate dos
+return dosServer
+request -> dis: create
+activate dis
+return disServer
+request -> dos: create
+activate dos
+return outS
+request -> dis: create
+activate dis
+return inS
+
+request -> message: create(inS)
+activate message
+return request
+request -> message: create()
+activate message
+return response
+
+request -> sbpf: createViewInRealTimeRequest(boardTitle)
+activate sbpf
+sbpf --> request: viewInRealTimeRequest
+deactivate sbpf
+request -> dos: writeUTF(viewInRealTimeRequest)
+activate dos
+deactivate dos
+request -> dis : readUTF()
+activate dis
+note right : for more information check SD_BoardInformation
+dis --> request: boardInfo
+deactivate dis
+
+request -> sbpf: decodeDTO(boardInfo)
+activate sbpf
+return boardCellsInfo
+
+
+request -> request: getTableInHTML(boardCellsInfo,boardTitle)
+activate request
+return content
+
+request -> message: setContentFromString(content,"text/html");
+request -> message: setResponseStatus("200 Ok");
+
+
+request -> message: send (outS);
+
+
+
+deactivate ui
+
+deactivate user
+@enduml

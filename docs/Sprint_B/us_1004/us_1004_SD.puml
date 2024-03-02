@@ -1,0 +1,159 @@
+@startuml
+autonumber
+actor "Manager" as MGR
+
+participant ": OpenCloseCourseUI" as UI <<Presentation>>
+control "OpenCloseCourseController" as CTRL <<Application>>
+participant ": OpenCloseCourseService" as CSS <<Service>>
+participant ": PersistenceContext" as PC <<Persistence>>
+participant "factory : RepositoryFactory" as RF <<Factory>>
+participant ": CourseMapper" as CM <<DTO>>
+participant ": CourseDTOBuilder" as CB <<Builder>>
+participant ": Course" as C <<Domain>>
+participant ": CourseTitle" as CT <<Domain>>
+participant ": CourseIdentifier" as CI <<Domain>>
+participant ": CourseStatusValue" as CSV <<Domain>>
+participant ": CourseStatus" as CS <<Domain>>
+participant ": CourseDTOWithIdTitleStatus" as CDTO <<DTO>>
+database CourseRepository as CR <<Repository>>
+
+activate MGR
+MGR -> UI : asks to change the status of a course to open/closed
+activate UI
+UI -> CTRL  : create()
+activate CTRL
+CTRL -> CSS  : create()
+
+activate CSS
+CSS -> PC : repositories()
+activate PC
+PC -> RF : create()
+activate RF
+deactivate RF
+PC --> CSS : theFactory
+deactivate PC
+CSS ->CR : courseRepository()
+activate CR
+CR --> CSS : courseRepository
+deactivate CR
+deactivate CSS
+deactivate CTRL
+
+
+UI->CTRL : listOpenableClosableCourses()
+activate CTRL
+CTRL-> CSS : listOpenableClosableCourses()
+activate CSS
+CSS -> CR : listOpenableClosableCourses()
+activate CR
+CR --> CSS : courseList
+deactivate CR
+deactivate CR
+loop for each course from courseList
+CSS -> CM : toDTOWithIdTitleStatus(course)
+activate CM
+CM -> CB : create()
+activate CB
+deactivate CB
+CM -> C : returnCourseIdentifierString()
+activate C
+C -> CI : returnCourseIdentifierString()
+activate CI
+CI --> C : course_Id
+deactivate CI
+C --> CM : course_Id
+deactivate C
+CM -> CB : withCourseIdentifier()
+activate CB
+CB --> CM : courseDTOBuilder
+deactivate CB
+CM -> C : returnCourseTitleString()
+activate C
+C -> CT : returnCourseTitleString()
+activate CT
+CT --> C : course_title
+deactivate CT
+C --> CM : course_title
+deactivate C
+
+
+CM -> CB : withCourseTitle()
+activate CB
+CB --> CM : courseDTOBuilder
+deactivate CB
+CM -> C : returnCourseStatusString()
+activate C
+C -> CS : returnCourseStatusString()
+activate CS
+CS --> C : course_status
+deactivate CS
+C --> CM : course_status
+deactivate C
+CM -> CB : withCourseStatus()
+activate CB
+CB --> CM : courseDTOBuilder
+deactivate CB
+CM -> CB : buildWithIdTitleStatus()
+activate CB
+CB -> CDTO : create(courseIdentifier, courseTitle, courseStatus)
+activate CDTO
+deactivate CDTO
+CB --> CM : courseDTO
+deactivate CB
+CM --> CSS : courseDTO
+deactivate CM
+end loop
+CSS --> CTRL : courseDTOList
+deactivate CSS
+CTRL --> UI : courseDTOList
+deactivate CTRL
+
+UI --> MGR : shows all courses with current state
+deactivate UI
+
+MGR -> UI : picks a course
+activate UI
+
+UI --> MGR : asks to which state to change
+deactivate UI
+MGR -> UI : chooses state
+activate UI
+UI --> MGR : asks for confirmation
+deactivate UI
+
+MGR-> UI : confirms
+activate UI
+UI -> CTRL : changeCourseStatus(courseDTO, newStatus)
+activate CTRL
+
+CTRL -> CSS : changeCourseStatus(courseDTO, newStatus)
+activate CSS
+CSS -> CI : create(courseDTO.courseIdentifier)
+activate CI
+deactivate CI
+CSS -> CR : ofIdentity(CourseIdentifier)
+activate CR
+CR --> CSS : course
+deactivate CR
+CSS -> C : changeStatus(newStatus)
+activate C
+C -> CSV : valueOf(newStatus)
+activate CSV
+CSV --> C : courseStatusValue
+deactivate CSV
+C -> CS : create(courseStatusValue)
+activate CS
+C --> CSS : true
+
+deactivate CS
+deactivate C
+
+CSS -> CR : save(course)
+activate CR
+deactivate CR
+deactivate CSS
+deactivate CTRL
+
+UI--> MGR : informs operation success
+
+@enduml

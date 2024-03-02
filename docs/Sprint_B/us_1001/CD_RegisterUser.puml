@@ -1,0 +1,196 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+
+class Teacher <<domain>>
+class Student <<domain>>
+class AddUserUI <<presentation>>
+class AddUserController <<application>>
+class AuthzRegistry <<application>>
+class AuthorizationService  <<application>>
+class UserManagementService  <<application>>
+class SystemUserBuilder <<builder>>
+class SystemUser   <<domain>>
+class PersonService  <<application>>
+class PersonBuilder  <<builder>>
+class TeacherBuilder  <<builder>>
+class StudentBuilder  <<builder>>
+class Person <<domain>>
+
+class PersistenceContext  <<persistence>>
+class RepositoryFactory  <<factory>>
+class UserRepository  <<repository>>
+class PersonRepository  <<repository>>
+class StudentRepository  <<repository>>
+
+AddUserUI ..>AddUserController
+AddUserController ..> PersonService
+PersonService ..> UserManagementService
+AddUserController ..> AuthzRegistry
+AddUserController ..> AuthorizationService
+PersonService ..> AuthzRegistry
+
+UserManagementService ..> SystemUserBuilder
+UserManagementService ..> PersistenceContext
+UserManagementService ..> RepositoryFactory
+UserManagementService ..> UserRepository
+
+PersonService ..> PersonBuilder
+PersonService ..> TeacherBuilder
+PersonService ..> StudentBuilder
+PersonService ..> PersistenceContext
+PersonService ..> RepositoryFactory
+PersonService ..> PersonRepository
+PersonService ..> StudentRepository
+
+
+PersistenceContext ..> RepositoryFactory
+RepositoryFactory ..> UserRepository
+RepositoryFactory ..> PersonRepository
+RepositoryFactory ..> StudentRepository
+
+PersonRepository ..> Person
+PersonBuilder ..> Person
+StudentBuilder ..> Student
+TeacherBuilder ..> Teacher
+UserRepository ..> SystemUser
+SystemUserBuilder ..> SystemUser
+
+Person --> SystemUser
+Person --> Student
+Person --> Teacher
+
+class AddUserUI {
+doShow();
+showRoles();
+buildRolesMenu();
+}
+
+class Person {
+FullName : fullName
+SystemUser : systemUser
+ID_Person : id
+Teacher: teacher
+Student: student
+}
+
+class Student {
+TaxPayerNumber: taxPayerNumber
+MecanographicNumber : mecanographicNumber
+DateOfBirth : dateOfBirth
+}
+
+class Teacher {
+TaxPayerNumber: taxPayerNumber
+Acronym : acronym
+DateOfBirth : dateOfBirth
+}
+
+class AddUserController{
+addUser(String: username,String: password,String: firstName, String: lastName,String: fullName,String: email,Set<Role> : roleTypes)
+addUser(String: username,String: password,String: firstName, String: lastName,String: fullName,Set<Role>: roleTypes,String: email,String: Acronym ,String: Date of Birth,int: Tax Payer Number)
+addUser(String: username,String: password,String: firstName, String: lastName,String: fullName,String: email,Set<Role>: roleTypes,String: Date of Birth,int: Tax Payer Number)
+}
+
+class PersistenceContext{
+repositories()
+}
+class RepositoryFactory{
+users()
+personRepository()
+studentRepository()
+}
+
+class UserRepository{
+save(SystemUser : user)
+delete(SystemUser : user)
+}
+
+class PersonRepository{
+save(Person: person)
+findTotalNumberOfPerson()
+}
+
+class StudentRepository{
+findTotalMecanographicNumberByYear(String :year)
+}
+
+class AuthzRegistry{
+authorizationService()
+userService()
+}
+
+class AuthorizationService{
+ensureAuthenticatedUserHasAnyOf(Role... actions)
+}
+
+class UserManagementService{
+registerNewUser(String: username,String: rawPassword,String: firstName,String: lastName,String: email,Set<Role>: roles,Calendar: createdOn) }
+}
+
+class SystemUserBuilder{
+Username: username;
+Password: password;
+Name: name;
+EmailAddress: email;
+Calendar: createdOn;
+RoleSet: roles;
+PasswordPolicy: policy;
+PasswordEncoder: encoder;
+with(String: userName,String: password, String: firstName, String: lastName,String: email)
+createdOn(Calendar: createdOn)
+withRoles(Set<Role>: someRoles)
+}
+
+class SystemUser{
+Username: username;
+Password: password;
+Name: name;
+EmailAddress: email;
+Calendar: createdOn;
+RoleSet: roles;
+}
+
+class PersonBuilder{
+FullName: fullname
+SystemUser: user
+ID_Person : id_person
+Teacher: teacher
+Student: student
+
+with(String: fullname,SystemUser: user)
+with(String: fullname,SystemUser: user, Teacher: teacher)
+with(String: fullname,SystemUser: user, Student: student)
+with(int: Id_Person)
+withMecanographicNumber(int: number,String: year)
+build()
+}
+
+class TeacherBuilder{
+DateOfBirth: DateOfBirth
+TaxPayerNumber: taxPayerNumber
+Acronym: acronym
+
+with(String: acronym, Date: DateOfBirth, int: taxPayerNumber)
+
+build()
+}
+
+class StudentBuilder{
+MecanographicNumber: mecanographicNumber
+DateOfBirth: DateOfBirth
+TaxPayerNumber: taxPayerNumber
+
+with(Date: DateOfBirth, int: taxPayerNumber)
+withMecanographicNumber(int number,String year)
+
+
+build()
+}
+
+class PersonService{
+registerNewPerson(String: fullname,SystemUser: user)
+registerNewStudent(String: fullname,SystemUser: user , Date: DateOfBirth, int: taxPayerNumber)
+registerNewTeacher(String: fullname,SystemUser: user ,String: acronym, Date: DateOfBirth, int: taxPayerNumber)
+}
+@enduml

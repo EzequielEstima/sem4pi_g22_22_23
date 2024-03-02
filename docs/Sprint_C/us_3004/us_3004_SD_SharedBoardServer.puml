@@ -1,0 +1,78 @@
+@startuml
+autonumber
+title ShareBoard - SharedBoardServer
+
+participant ": AttendClient" as UI <<UI>>
+participant ": DataInputStream" as DIS
+participant ": ShareBoardRequest" as SBR <<UI>>
+participant ": SBPMessageFormat" as SBPMF
+participant ": DataOutputStream" as DOS
+control "ShareBoardController" as CTRL <<ShareBoardServer>> <<Application>>
+participant ": ShareBoardService" as SBS <<Service>>
+participant ": Person" as P <<Domain>>
+participant ": BoardParticipantFactory" as BPF <<Factory>>
+database BoardRepository as BR <<Repository>>
+database ": BoardParticipantRepository" as BPR <<Repository>>
+database PersonRepository as PR <<Repository>>
+participant ": AddNotificationService" as ANS <<Service>>
+participant ": AddTaskToBoardHistoryService" as ATTBHS <<Service>>
+activate UI
+UI -> DIS : readUTF()
+activate DIS
+return message
+UI -> SBPMF : decodeFormat(message)
+activate SBPMF
+return arrayFormat
+UI -> SBR : shareBoard(message, outputStream)
+activate SBR
+SBR -> SBPMF : decodeParams(message)
+activate SBPMF
+return params
+SBR -> CTRL : shareBoard(boardTitle, email, permission)
+activate CTRL
+CTRL -> SBS : shareBoard(boardTitle, email, permission)
+activate SBS
+SBS -> BR : findBoardByTitle(boardTitle)
+activate BR
+return board
+SBS -> BPF : create()
+activate BPF
+deactivate BPF
+SBS -> BPR : findMaxId()
+activate BPR
+return maxId
+SBS -> BPF : buildBoardParticipant(id, permission, board)
+activate BPF
+return boardParticipant
+SBS -> PR : findPersonByEmail(email)
+activate PR
+return person
+deactivate PR
+SBS -> P : addBoardParticipant(boardParticipant)
+activate P
+return true
+SBS -> BPR : save(boardParticipant)
+activate BPR
+deactivate BPR
+SBS -> PR : save(person)
+activate PR
+deactivate PR
+SBS -> ANS : addNotification(message, boardTitle)
+activate ANS
+return true
+SBS -> ATTBHS : addShareBoardTaskToHistory(boardTitle, boardParticipant)
+activate ATTBHS
+return true
+SBS --> CTRL : true
+deactivate SBS
+CTRL --> SBR : true
+deactivate CTRL
+SBR -> SBPMF : createAcknowledgeRequest()
+activate SBPMF
+return ackRequest
+SBR -> DOS : writeUTF(ackRequest)
+activate DOS
+deactivate DOS
+deactivate SBR
+deactivate UI
+@enduml

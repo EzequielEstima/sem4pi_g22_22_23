@@ -1,0 +1,46 @@
+@startuml
+autonumber
+title ArchiveBoard - SharedBoardServer
+
+participant ": AttendClient" as AC <<Application>>
+participant ": DataInputStream" as DIS
+participant ": DataOutputStream" as DOS
+participant ": SBPMessageFormat" as SBPMsgF
+control "HistoryOfUpdatesController" as CTRL <<ShareBoardServer>> <<Application>>
+participant ": HistoryOfUpdatesService" as SBS <<Service>>
+database ": BoardHistoryRepository" as BHR <<Repository>>
+
+activate AC
+AC -> DIS : create(socket)
+activate DIS
+deactivate DIS
+AC -> DOS : create(socket)
+activate DOS
+deactivate DOS
+AC -> DIS : readUTF()
+activate DIS
+return message
+AC -> SBPMsgF : decodeFormat(message)
+activate SBPMsgF
+return arrayFormat
+AC -> SBPMsgF : decodeParams(message)
+activate SBPMsgF
+return params
+AC -> CTRL : historyOfUpdates(boardId)
+activate CTRL
+CTRL -> SBS : historyOfUpdates(boardId)
+activate SBS
+SBS -> BHR : ofIdentity()
+activate BHR
+return boardHistory
+SBS -> BHR : boardHistoryUpdates(boardHistoryId)
+activate BHR
+return taskList
+deactivate BHR
+SBS --> CTRL : taskList
+deactivate SBS
+CTRL --> AC : taskList
+deactivate CTRL
+deactivate AC
+
+@enduml

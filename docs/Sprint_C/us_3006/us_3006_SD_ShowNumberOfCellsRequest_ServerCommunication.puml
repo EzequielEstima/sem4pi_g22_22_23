@@ -1,0 +1,50 @@
+@startuml
+autonumber
+
+title Show Cell Number - SharedBoardServer
+
+participant ": AttendClient" as AC <<Application>>
+participant ": DataInputStream" as DIS
+participant ": DataOutputStream" as DOS
+participant ": SBPMessageFormat" as SBPMF
+control "ShowCellInformationController" as CTRL <<ShareBoardServer>> <<Application>>
+participant ": CellRequestInformationService" as CPS <<Service>>
+participant ": Board" as B <<Entity>>
+database ": BoardRepository" as BR <<Repository>>
+
+activate AC
+AC -> DIS : readUTF()
+activate DIS
+return message
+AC -> SBPMF : decodeParams(message)
+activate SBPMF
+return params
+AC -> CTRL : getMaxColumn(boardTittle)
+activate CTRL
+CTRL -> CPS : getMaxColumn(boardTittle)
+activate CPS
+CPS -> BR : findBoardByTitle(boardTittle)
+BR -> CPS : board
+CPS ->  B : maxColumn()
+activate B
+return maxColumn
+return maxColumn
+return maxColumn
+
+AC -> CTRL : getMaxRow(boardTittle)
+activate CTRL
+CTRL -> CPS : getMaxRow(boardTittle)
+activate CPS
+CPS -> BR : findBoardByTitle(boardTittle)
+BR -> CPS : board
+CPS ->  B : maxRow()
+activate B
+return maxRow
+return maxRow
+return maxRow
+AC -> SBPMF : createShowNumberOfCellsRequest(maxColumn, maxRow)
+activate SBPMF
+return showNumberOfCellsRequest
+AC -> DOS : writeUTF(showNumberOfCellsRequestRCV)
+
+@enduml

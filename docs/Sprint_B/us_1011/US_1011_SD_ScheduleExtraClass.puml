@@ -1,0 +1,130 @@
+@startuml
+
+actor Teacher as ACTOR
+participant ScheduleExtraClassUI as UI <<presentation>>
+control ScheduleExtraClassController as CONTROLLER <<application>>
+control ListCourseController as CONTROLLER_LIST <<application>>
+control CheckStudentsEnrollmentsInCourseController as CONTROLLER_CHCK_ENROLL <<application>>
+participant ScheduleExtraClassService as SERVICE <<application>>
+participant CourseMapper as COURSE_MAP <<dto>>
+participant Course as COURSE <<domain>>
+participant CourseId as COURSE_ID <<domain>>
+participant CourseIdentifier as COURSE_ID <<domain>>
+participant ExtraClassFactory as EX_CLASS_FAC <<doamin>>
+participant ExtraClass as EX_CLASS <<domain>>
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+database CourseRepository as COURSE_REPO <<repository>>
+database ExtraClassRepository as EXTRA_CASS_REPO <<repository>>
+database StudentRepository as STUD_REPO <<repository>>
+database TeacherRepository as TEACHER_REPO <<repository>>
+autonumber
+
+
+activate ACTOR
+activate UI
+ACTOR -> UI : Teacher selects option to schedule extra class
+UI -> CONTROLLER : create()
+activate CONTROLLER
+CONTROLLER -> SERVICE : create()
+activate SERVICE
+deactivate SERVICE
+deactivate CONTROLLER
+UI -> CONTROLLER : listAllTeacherAvailableCourses()
+activate CONTROLLER
+CONTROLLER -> CONTROLLER_LIST : create()
+activate CONTROLLER_LIST
+deactivate CONTROLLER_LIST
+CONTROLLER -> CONTROLLER_LIST : listCourse()
+note right: Method listCourse() is represented in diagram \n SD_ListCourse present in the folder us_1006
+activate CONTROLLER_LIST
+CONTROLLER_LIST --> CONTROLLER : courseDTOList
+deactivate CONTROLLER_LIST
+CONTROLLER --> UI : courseDTOList
+deactivate CONTROLLER
+UI --> ACTOR : System shows available courses and ask the teacher to select one
+ACTOR -> UI : Teacher chooses one course
+UI --> ACTOR : System ask for extra class information
+ACTOR -> UI : Teacher inserts information
+UI --> ACTOR : System ask for confirmation
+ACTOR -> UI : Teacher confirms
+
+UI -> CONTROLLER : verifyScheduleAvailability(dateWithTime, duration, courseDTO, studentMechNumList)
+activate CONTROLLER
+CONTROLLER -> CONTROLLER_CHCK_ENROLL : verifyScheduleAvailability(dateWithTime. duration, courseDTO, studentMechNumList)
+activate CONTROLLER_CHCK_ENROLL
+note right : Method verifyScheduleAvailability() is represented in diagram \n US_1011_SD_VerifyScheduleAvailability present in the folder us_1011
+CONTROLLER_CHCK_ENROLL -> CONTROLLER : boolean
+deactivate CONTROLLER_CHCK_ENROLL
+CONTROLLER --> UI : boolean
+deactivate CONTROLLER
+alt if boolean == false
+UI --> ACTOR : informs that some students already have classes/extra-classes scheduled for that time
+ACTOR -> UI : Teacher decides if still wants to create extra-class
+
+end alt
+
+UI -> CONTROLLER : createExtraClass(dateWithTime, duration, courseDTO, studentMechNumList)
+activate CONTROLLER
+CONTROLLER -> SERVICE : createExtraClass(dateWithTime, duration, courseDTO, studentMechNumList)
+activate SERVICE
+note right SERVICE : Creation of CourseRepository, ExtraClassRepository, StudentRepository and TeacherRepository as described in "US_1008_SD_RepositoryCreation" (us_1008 folder)
+SERVICE -> auth: authorizationService()
+activate auth
+auth -> SERVICE: authz
+deactivate auth
+SERVICE -> authSV: session()
+activate authSV
+authSV --> SERVICE: userSession
+deactivate authSV
+SERVICE -> userSe: authenticatedUser()
+activate userSe
+userSe --> SERVICE : systemUser
+deactivate userSe
+SERVICE -> TEACHER_REPO : findTeacherBySystemUser(systemUser)
+activate TEACHER_REPO
+TEACHER_REPO --> SERVICE : teacher
+deactivate TEACHER_REPO
+SERVICE -> COURSE_ID : create(courseIdentifier)
+activate COURSE_ID
+deactivate COURSE_ID
+SERVICE -> COURSE_REPO: ofIdentity(courseId)
+activate COURSE_REPO
+COURSE_REPO --> SERVICE : course
+deactivate COURSE_REPO
+loop for each mechanographic number in studentMechNumList
+SERVICE -> STUD_REPO : ofIdentity(mecNum)
+activate STUD_REPO
+STUD_REPO-->SERVICE : student
+deactivate STUD_REPO
+end loop
+SERVICE -> EXTRA_CASS_REPO : count()
+activate EXTRA_CASS_REPO
+EXTRA_CASS_REPO --> SERVICE : total
+deactivate EXTRA_CASS_REPO
+SERVICE -> EX_CLASS_FAC : buildExtraClass(extraClassId, dateWithTime, duration, studentList, teacher)
+activate EX_CLASS_FAC
+EX_CLASS_FAC -> EX_CLASS : create(extraClassId, dateWithTime, duration, studentList, teacher)
+activate EX_CLASS
+deactivate EX_CLASS
+EX_CLASS_FAC --> SERVICE : newExtraClass
+deactivate EX_CLASS_FAC
+deactivate EX_CLASS
+SERVICE -> EXTRA_CASS_REPO : save(newExtraClass)
+activate EXTRA_CASS_REPO
+deactivate EXTRA_CASS_REPO
+SERVICE -> COURSE : addExtraClass(newExtraClass)
+activate COURSE
+deactivate COURSE
+SERVICE -> COURSE_REPO : save(course)
+activate COURSE_REPO
+deactivate COURSE_REPO
+SERVICE --> CONTROLLER : operation success
+deactivate SERVICE
+CONTROLLER --> UI : operation success
+deactivate CONTROLLER
+
+UI --> ACTOR : System informs operation success
+
+@enduml

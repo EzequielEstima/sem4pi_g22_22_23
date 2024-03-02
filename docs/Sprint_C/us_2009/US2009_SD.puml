@@ -1,0 +1,29 @@
+@startuml
+actor Student as S
+participant "TakeFormativeExamUI" as UI <<Presentation>>
+control "TakeFormativeExamController" as CTRL <<Application>>
+participant "TakeFormativeExamService" as SV <<Service>>
+database "FormativeExamRepository" as FER <<Persistence>>
+participant "<<service>>\nVerifyFormativeExamService" as VFESv
+participant "<<service>>\nEvaluateResolutionService" as ERS
+
+S->UI: Selects the formative exam and introduce the resolution path
+activate S
+activate UI
+UI->CTRL : takeFormativeExam(formativeExamId, resolutionFilePath)
+activate CTRL
+CTRL->SV : takeFormativeExam(formativeExamId, resolutionFilePath)
+activate SV
+SV->FER : ofIdentify(formativeExamId)
+activate FER
+return formativeExam
+SV->VFESv : verifyFormativeExam(resolution)
+SV->ERS : takeFormativeExam(resolution)
+activate ERS
+return grade and feedback
+return grade and feedback
+return grade and feedback
+return shows grade and feedback
+deactivate UI
+deactivate S
+@enduml

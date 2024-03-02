@@ -1,0 +1,45 @@
+@startuml
+
+class CreateCourseUI{
++ doShow()
+}
+class CreateCourseController{
++ createCourse(courseId : String, courseTitle : String, courseName : String, description : String, maxEnrollments : int, minEnrollments : int)
+}
+class CreateCourseService{
++ createCourse(courseId : String, courseTitle : String, courseName : String, description : String, maxEnrollments : int, minEnrollments : int)
+}
+class CourseFactory{
++ buildCourse(courseId : String, courseTitle : String, courseName : String, description : String, maxEnrollments : int, minEnrollments : int)
+}
+class Course{
+- courseId : CourseIdentifier
+- courseTitle : CourseTitle
+- courseName : CourseName
+- description : Description
+- enrollmentLimits : EnrollmentLimits
+- courseStatus : CourseStatus
+- teacherInCharge : Teacher
+- enrollmentsList : ArrayList<Enrollment>
+- classesList : ArrayList<Class>
+- extraClassList : ArrayList<ExtraClass>
+}
+class RepositoryFactory{
++ courses()
+}
+class CourseRepository{
++ save(newCourse : Course)
+}
+class PersistenceContext{
++ repositories()
+}
+
+
+CreateCourseUI ..> CreateCourseController
+CreateCourseController ..> CreateCourseService
+CreateCourseService ..> PersistenceContext
+CreateCourseService ..> CourseFactory
+CourseFactory ..> Course
+PersistenceContext ..> RepositoryFactory
+RepositoryFactory ..> CourseRepository
+@enduml

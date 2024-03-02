@@ -1,0 +1,203 @@
+@startuml
+autonumber
+actor "Manager" as MGR
+
+participant ": ApproveRejectEnrollmentUI" as UI <<Presentation>>
+control ": ApproveRejectEnrollmentController" as CTRL <<Application>>
+participant ": ApproveRejectEnrollmentService" as ARES <<Service>>
+participant ": PersistenceContext" as PC <<Persistence>>
+participant "factory : RepositoryFactory" as RF <<Factory>>
+participant ": CourseMapper" as CM <<DTO>>
+participant ": studentMapper" as PM <<DTO>>
+participant ": Enrollment" as E <<Domain>>
+participant ": EnrollmentStatusValue" as ESV <<Domain>>
+participant ": EnrollmentStatus" as ES <<Domain>>
+participant ": CourseIdentifier" as CI <<Domain>>
+participant ": MechanographicNumber" as SMN <<Domain>>
+participant ": Course" as C <<Domain>>
+participant ": EnrollmentLimits" as EL <<Domain>>
+database CourseRepository as CR <<Repository>>
+database EnrollmentRepository as ER <<Repository>>
+
+activate MGR
+MGR -> UI : asks to approve/reject student's applications
+activate UI
+UI -> CTRL  : create()
+activate CTRL
+CTRL -> ARES  : create()
+
+activate ARES
+ARES -> PC : repositories()
+activate PC
+PC -> RF : create()
+activate RF
+deactivate RF
+PC --> ARES : theFactory
+deactivate PC
+ARES ->ER : enrollmentRepository()
+activate ER
+ER --> ARES : enrollmentRepository
+deactivate ER
+ARES -> CR : courseRepository()
+activate CR
+CR --> ARES : courseRepository
+deactivate CR
+deactivate ARES
+deactivate CTRL
+
+
+UI->CTRL : listCoursesWithEnrollments()
+activate CTRL
+CTRL-> ARES : listCoursesWithEnrollments()
+activate ARES
+ARES -> ER : listCoursesWithEnrollments()
+activate ER
+ER --> ARES : courseList
+deactivate ER
+deactivate ER
+loop for each course from courseList
+ARES -> CM : toDTOWithIdTitle(course)
+note right : this method is represented in us_1009_SD_CourseDTO
+activate CM
+
+CM --> ARES : courseDTO
+deactivate CM
+end loop
+ARES --> CTRL : courseDTOList
+deactivate ARES
+CTRL --> UI : courseDTOList
+deactivate CTRL
+
+UI --> MGR : shows all courses that have enrollments pending
+deactivate UI
+
+MGR -> UI : picks a course
+activate UI
+UI -> CTRL : verifyIfWillExceedEnrollmentLimits(courseDTO)
+activate CTRL
+CTRL -> ARES : verifyIfWillExceedEnrollmentLimits(courseDTO)
+activate ARES
+ARES -> CI : create(courseDTO.courseIdentifier)
+activate CI
+deactivate CI
+ARES -> CR : ofIdentity(CourseIdentifier)
+activate CR
+CR --> ARES : course
+deactivate CR
+ARES -> ER : getNumberOfEnrollmentsAcceptedByCourse(course)
+activate ER
+ER --> ARES : enrollmentsAccepted
+deactivate ER
+ARES -> C : verifyIfWillExceedEnrollmentLimits(numberOfAcceptedEnrollments, numberOfNewEnrollments)
+activate C
+C -> EL : verifyIfWillExceedEnrollmentLimits(numberOfAcceptedEnrollments, numberOfNewEnrollments)
+activate EL
+EL --> C : false
+deactivate EL
+C --> ARES : false
+deactivate C
+deactivate CTRL
+deactivate ARES
+
+UI -> CTRL : listStudentsPendingInCourse(courseDTO)
+activate CTRL
+
+CTRL -> ARES : listStudentsPendingInCourse(courseDTO)
+activate ARES
+ARES -> CI : create(courseDTO.courseIdentifier)
+activate CI
+deactivate CI
+
+ARES -> ER : listStudentsPendingInCourse(CourseIdentifier)
+activate ER
+ER --> ARES : studentList
+deactivate ER
+loop for each student in studentList
+ARES -> PM : toDTOWithMechNumber(student)
+note right : this method is represented in us_1009_SD_StudentDTO
+activate PM
+
+PM --> ARES : studentDTO
+deactivate PM
+end loop
+
+ARES --> CTRL : studentDTOList
+deactivate ARES
+CTRL --> UI : studentDTOList
+deactivate CTRL
+
+loop until Manager doesn't want to accept/reject students in the selected course or there are no more students applications to that course
+
+UI--> MGR : shows all students that applied and are still pending
+deactivate UI
+MGR -> UI : chooses the student
+activate UI
+UI --> MGR : asks if it wants to accept or reject
+deactivate UI
+MGR -> UI : chooses an option
+activate UI
+UI -> CTRL : changeEnrollmentStatus(courseDTO, studentDTO, newStatus)
+activate CTRL
+CTRL -> ARES : changeEnrollmentStatus(courseDTO, studentDTO, newStatus)
+activate ARES
+ARES -> CI : create(courseDTO.courseIdentifier)
+activate CI
+deactivate CI
+ARES -> SMN : create(studentDTO.mechanographicNumber)
+activate SMN
+deactivate SMN
+ARES -> ER : findEnrollmentByCourseIDAndMechNumber(CourseIdentifier, MechanographicNumber)
+activate ER
+ER --> ARES : enrollment
+deactivate ER
+ARES -> E : changeStatus(newStatus)
+activate E
+E -> ESV : valueOf(newStatus)
+activate ESV
+ESV --> E : enrollmentStatusValue
+deactivate ESV
+E -> ES : create(enrollmentStatusValue)
+activate ES
+deactivate ES
+deactivate E
+ARES -> ER : save(enrollment)
+activate ER
+deactivate ER
+
+deactivate CTRL
+deactivate ARES
+UI --> MGR : informs operation success
+UI -> CTRL : verifyIfWillExceedEnrollmentLimits(courseDTO)
+activate CTRL
+CTRL -> ARES : verifyIfWillExceedEnrollmentLimits(courseDTO)
+activate ARES
+ARES -> CI : create(courseDTO.courseIdentifier)
+activate CI
+deactivate CI
+ARES -> CR : ofIdentity(CourseIdentifier)
+activate CR
+CR --> ARES : course
+deactivate CR
+ARES -> ER : getNumberOfEnrollmentsAcceptedByCourse(course)
+activate ER
+ER --> ARES : enrollmentsAccepted
+deactivate ER
+ARES -> C : verifyIfWillExceedEnrollmentLimits(numberOfAcceptedEnrollments, numberOfNewEnrollments)
+activate C
+C -> EL : verifyIfWillExceedEnrollmentLimits(numberOfAcceptedEnrollments, numberOfNewEnrollments)
+activate EL
+EL --> C : false
+deactivate EL
+C --> ARES : false
+deactivate C
+deactivate CTRL
+deactivate ARES
+UI --> MGR : asks if it wants to keep accepting/rejecting\nstudent's applications in that course
+deactivate UI
+MGR -> UI : chooses option
+
+activate UI
+deactivate UI
+
+end loop
+@enduml

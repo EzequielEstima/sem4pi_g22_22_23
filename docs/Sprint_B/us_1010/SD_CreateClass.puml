@@ -1,0 +1,185 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+
+actor Manager
+
+participant "CreateClassUI" as ui <<presentation>>
+participant "CreateClassController" as ctrl <<application>>
+participant ListCourseController as listController <<application>>
+participant "VerifyIfExistAClassAtTheTimeForClassController" as ctrlVer <<application>>
+
+
+
+participant CreateClassService as service <<application>>
+participant PersistenceContext as Persistence <<persistence>>
+participant RepositoryFactory as RepFactory <<factory>>
+participant CourseIdentifier as courseID <<domain>>
+
+
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+
+
+
+
+participant Course as course <<domain>>
+
+participant ClassBuilder as builder <<builder>>
+participant Class as courseClass <<domain>>
+
+database CourseRepository as courseRep <<repository>>
+database TeacherRepository as teaRep <<repository>>
+database ClassRepository as classRep <<repository>>
+
+activate Manager
+Manager -> ui:  selects option to create a class
+activate ui
+ui -> ctrl: create()
+activate ctrl
+ctrl -> service: create()
+activate service
+service -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence --> service: factory
+deactivate Persistence
+service -> RepFactory: courseRepository()
+activate RepFactory
+RepFactory -> courseRep: create
+RepFactory --> service: courseRepository
+deactivate RepFactory
+service -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence --> service: factory
+deactivate Persistence
+service -> RepFactory: classRepository()
+activate RepFactory
+RepFactory -> classRep: create
+RepFactory --> service: classRepository
+deactivate RepFactory
+service -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence --> service: factory
+deactivate Persistence
+service -> RepFactory: TeacherRepository()
+activate RepFactory
+RepFactory -> teaRep: create
+RepFactory --> service: TeacherRepository
+deactivate RepFactory
+deactivate service
+deactivate ctrl
+
+ui -> ctrl: listCourse()
+activate ctrl
+ctrl -> listController : create ()
+ctrl -> listController : listCourse()
+activate  listController
+note right: For more information about the function listCourse check \n SD_ListCourse present in the folder us_1006
+listController --> ctrl : listCourseDto
+deactivate listController
+ctrl --> ui: listCourseDto
+deactivate ctrl
+ui --> Manager: shows list of courses the teacher teaches
+Manager -> ui: selects a course
+ui --> Manager: ask for class title, the starting date, starting time, number of classes and duration
+Manager -> ui: inserts the information required
+ui --> Manager: show information inserted and ask for confirmation
+Manager -> ui: validate the information
+ui-> ctrl: verifyIfExistAClassAtTheTime(startingDateWithTime, duration, courseDTO)
+activate ctrl
+
+ctrl -> ctrlVer : create ()
+ctrl -> ctrlVer: verifyIfExistAClassAtTheTime(startingDateWithTime. duration, courseDTO)
+activate ctrlVer
+note right: For more information check \n SD_VerifyIfExistAClassAtTheTimeForClass
+ctrlVer --> ctrl: boolean
+deactivate
+
+ctrl --> ui: boolean
+deactivate ctrl
+alt boolean == true
+ui --> Manager: Informs If exist a class at the time
+Manager -> ui: Permission to continue the creation
+end
+ui -> ctrl: createClass(title, startingDateWithTime, numberOfRecurrence, duration, courseDTO)
+activate ctrl
+ctrl --> service: createClass(title, startingDateWithTime, numberOfRecurrence, duration, courseDTO)
+activate service
+
+service -> courseID : create(courseIdentifier)
+service -> courseRep: ofIdentity(courseId)
+activate courseRep
+courseRep --> service : course
+deactivate courseRep
+
+
+
+service -> classRep: count()
+activate classRep
+classRep --> service: numberOfClasses
+deactivate classRep
+
+
+service -> auth: authorizationService()
+activate auth
+auth -> service: authz
+deactivate auth
+service -> authSV: session()
+activate authSV
+authSV --> service: userSession
+deactivate authSV
+service -> userSe: authenticatedUser()
+activate userSe
+userSe --> service : systemUser
+deactivate userSe
+
+service -> teaRep : findTeacherBySystemUser(systemUser)
+activate teaRep
+teaRep --> service : teacher
+deactivate teaRep
+
+service -> builder: withTitleDateWithTimeNumberOfClassDurationIDTeacher(title, startingDateWithTime, numberOfRecurrence, duration, id, teacher)
+
+service -> builder: build()
+activate builder
+builder -> courseClass: create(title, ListScheduleDates, id,teacher)
+activate  courseClass
+courseClass --> builder: courseClass
+deactivate courseClass
+builder --> service: courseClass
+deactivate builder
+service->classRep: save(courseClass)
+service-> course: addClass(courseClass)
+service-> courseRep: save(course)
+
+service --> ctrl: boolean
+
+
+deactivate service
+ctrl --> ui: boolean
+deactivate ctrl
+ui --> Manager :Informs if the creation of the class was a success
+deactivate ui
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@enduml

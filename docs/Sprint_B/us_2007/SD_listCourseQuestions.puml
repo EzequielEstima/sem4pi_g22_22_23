@@ -1,0 +1,29 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+
+control "ListCourseQuestionsController" as CTRL <<Application>>
+participant ": ListQuestionsService" as LQS <<Service>>
+
+participant ": QuestionDTOWithIdMapper" as QM <<DTO>>
+database QuestionRepository as QR <<Repository>>
+
+CTRL -> LQS : listCourseQuestions(courseDTO)
+activate LQS
+
+LQS -> QR : listQuestionsByCourseId(courseDTO.courseId)
+activate QR
+QR --> LQS : questionList
+deactivate QR
+loop for each question in questionList
+LQS -> QM : toDTOWithId
+activate QM
+QM --> LQS : questionDTO
+deactivate QM
+end loop
+LQS --> CTRL : questionDTOList
+deactivate LQS
+
+@enduml

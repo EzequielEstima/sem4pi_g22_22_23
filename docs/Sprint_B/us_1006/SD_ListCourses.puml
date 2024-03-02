@@ -1,0 +1,166 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor User
+
+participant "ListCoursesUI" as ui <<presentation>>
+participant "ListCourseController" as ctrl <<application>>
+
+
+
+participant ListCourseService as service <<application>>
+
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+
+participant PersistenceContext as Persistence <<persistence>>
+participant RepositoryFactory as RepFactory <<factory>>
+participant SystemUser as systemUser <<Domain>>
+
+database CourseRepository as courseRep <<repository>>
+
+
+
+participant "CourseMapper" as cm <<DTO>>
+participant "CourseDTOBuilder" as cb <<Builder>>
+participant "Course" as course <<Domain>>
+participant "CourseTitle" as ct <<Domain>>
+participant "CourseIdentifier" as ci <<Domain>>
+participant "CourseDTOWithIdTitle" as cdto <<DTO>>
+
+
+
+activate User
+User -> ui: List Course
+activate ui
+ui -> ctrl: create()
+activate ctrl
+ctrl->service : create()
+deactivate ctrl
+ui -> ctrl: listCourse()
+activate ctrl
+
+
+ctrl->service : listCourse()
+activate service
+
+
+
+
+
+service -> auth: authorizationService()
+activate auth
+auth -> service: authz
+deactivate auth
+service -> authSV: session()
+activate authSV
+authSV --> service: userSession
+deactivate authSV
+service -> userSe: authenticatedUser()
+activate userSe
+userSe --> service : systemUser
+deactivate userSe
+
+service -> Persistence: repositories()
+activate Persistence
+Persistence -> RepFactory: create
+Persistence --> service: factory
+deactivate Persistence
+service -> RepFactory: courseRepository()
+activate RepFactory
+RepFactory -> courseRep: create
+RepFactory --> service: courseRepository
+deactivate RepFactory
+
+service -> systemUser: hasAny(BaseRoles.MANAGER)
+activate systemUser
+systemUser --> service: boolean
+deactivate systemUser
+
+
+alt boolean == true
+service -> courseRep: findAll()
+activate courseRep
+courseRep --> service: listCourse
+deactivate courseRep
+
+else boolean == false
+service -> systemUser: hasAny(BaseRoles.TEACHER)
+activate systemUser
+systemUser --> service: boolean
+deactivate systemUser
+
+alt boolean == true
+service -> courseRep: findTeacherCourses(systemUser)
+activate courseRep
+courseRep --> service: listCourse
+deactivate courseRep
+
+else boolean == false
+service -> courseRep: findStudentCourses(systemUser)
+activate courseRep
+courseRep --> service: listCourse
+deactivate courseRep
+
+end alt
+
+deactivate authSV
+
+end alt
+
+
+loop for each course from listCourse
+service -> cm : toDTOWithIdTitle(course)
+activate cm
+cm -> cb : create()
+
+cm -> course : returnCourseTitleString()
+activate course
+course -> ct : returnCourseTitleString()
+activate ct
+ct --> course : course_title
+deactivate ct
+course --> cm : course_title
+deactivate course
+cm -> cb : withCourseTitle(course_title)
+activate cb
+cb --> cm : courseDTOBuilder
+deactivate cb
+cm -> course : returnCourseIdentifierString()
+activate course
+course -> ci : returnCourseIdentifierString()
+activate ci
+ci --> course : course_Id
+deactivate ci
+course --> cm : course_Id
+deactivate course
+cm -> cb : withCourseIdentifier(course_Id)
+activate cb
+cb --> cm : courseDTOBuilder
+deactivate cb
+deactivate course
+cm -> cb : buildWithIdTitle()
+activate cb
+cb -> cdto : create(courseIdentifier, courseTitle)
+cb -> cm: courseDTO
+deactivate cb
+cm --> service : courseDTO
+deactivate cm
+end loop
+
+
+service -> ctrl : listCourseDto
+deactivate service
+
+
+
+ctrl -> ui : listCourseDto
+ui -> User : listCourseDto
+
+
+deactivate ui
+deactivate User
+@enduml

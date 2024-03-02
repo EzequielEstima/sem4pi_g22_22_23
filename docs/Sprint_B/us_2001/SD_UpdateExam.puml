@@ -1,0 +1,99 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor "Teacher" as t
+
+participant "UpdateExamUI" as ui <<Presentation>>
+participant "UpdateExamController" as ctrl <<Application>>
+participant "ListTeacherExamsController" as ctrlList <<Application>>
+participant "CreateUpdateExamService" as service <<Service>>
+
+participant PersistenceContext as persistence <<persistence>>
+participant RepositoryFactory as repFactory <<factory>>
+
+participant "ExamTitle" as examId <<Domain>>
+participant "ExamSpecification" as spec <<Domain>>
+participant "VerifyExamSpecificationService" as verExam <<Service>>
+participant "DateInterval" as dateInterval <<Domain>>
+
+
+participant "Exam" as exam <<Domain>>
+database ExamRepository as examRep <<Repository>>
+
+activate t
+
+t->ui: Select option update an exam
+activate ui
+ui-> ctrl: listTeacherExams()
+activate ctrl
+ctrl -> ctrlList: create()
+ctrl -> ctrlList: listTeacherExams()
+activate ctrlList
+ctrlList --> ctrl: listExamsDto
+note right : For more information about the function listTeacherExams check \n SD_listTeacherExamsController present in the folder us_2001
+deactivate ctrlList
+ctrl --> ui: listExamsDto
+deactivate ctrl
+ui -> t: shows list of exams the teacher created
+t -> ui: select one exam
+ui -> t: what do you which to update, and for the specific information
+t-> ui: inserts information
+ui -> ctrl: updateExam(structure,initialDate,finalDate,examDto)
+activate ctrl
+ctrl -> service: create()
+activate service
+
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: examRepository()
+activate repFactory
+repFactory -> examRep: create
+repFactory --> service: examRepository
+deactivate repFactory
+deactivate service
+ctrl->service: updateExam(structure,initialDate,finalDate,examDto)
+
+
+activate service
+
+service -> examId: create(examDto.examTitle)
+activate examId
+examId --> service: examTitle
+deactivate examId
+
+service -> examRep: ofIdentity(examTitle)
+activate examRep
+examRep --> service: exam
+deactivate examRep
+
+
+
+alt structure!= null
+service -> spec: create(structure);
+activate spec
+spec --> service: specificication
+deactivate spec
+service -> verExam: verifyExamSpecification(structure)
+activate verExam
+verExam --> service: boolean
+deactivate verExam
+service -> exam: updateExamSpecification(specification)
+else initialDate != null && finalDate != null
+service -> dateInterval: create(initialDate,finalDate)
+dateInterval --> service: dateInterval
+service -> exam: updateDateInterval(dateInterval)
+end
+service -> examRep: save(exam)
+service -> ctrl : boolean
+deactivate service
+return boolean
+return Informs operation was a success
+
+
+
+@enduml

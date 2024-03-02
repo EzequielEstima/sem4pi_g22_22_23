@@ -1,0 +1,73 @@
+@startuml
+autonumber
+title Create Post-It - SharedBoardServer
+
+participant ": AttendClient" as AC <<Application>>
+participant ": DataInputStream" as DIS
+participant ": DataOutputStream" as DOS
+participant ": SBPMessageFormat" as SBPMF
+control "UndoLastChangePostItController" as CTRL <<application>>
+participant "UndoLastChangePostItService" as ULCS <<application>>
+participant ": Board" as B <<Domain>>
+participant ": Task" as T <<Domain>>
+database ": PostItRepository" as PR <<Repository>>
+database ": BoardHistoryRepository" as BHR <<Repository>>
+database ": BoardRepository" as BR <<Repository>>
+
+activate AC
+AC -> DIS : readUTF()
+activate DIS
+return message
+AC -> SBPMF : decodeParams(message)
+activate SBPMF
+return params
+AC -> CTRL : undoLastChangInPostIt(boardTittle, column, row)
+activate CTRL
+CTRL -> ULCS : undoLastChangInPostIt(boardTittle, column, row)
+activate ULCS
+
+ULCS -> BR : findBoardByTitle(boardTitle)
+BR -> ULCS : board
+
+ULCS -> B : verifyPostItCanBeUpdated(row, column, boardParticipant, boardOwner)
+activate B
+return postIt
+deactivate B
+ULCS -> PR : getLastVersionOfPostIt(version, id);
+PR -> ULCS : lastPostIt
+
+ULCS -> BHR : getLastTaskForPostIt(postIt);
+BHR -> ULCS : task
+
+ULCS -> T : verify last task related to postIt
+activate T
+return boolean
+deactivate T
+
+ULCS -> B : undo last change in postIt
+activate B
+deactivate B
+
+ULCS -> ULCS : verify if user is owner or participant in the board
+ULCS -> B : addTaskToHistory(task)
+activate B
+deactivate B
+ULCS -> B : addNotification(notification)
+activate B
+deactivate B
+ULCS -> PR : save(postIt)
+ULCS -> BR : save(board)
+
+ULCS --> CTRL : true
+deactivate ULCS
+CTRL --> AC : true
+deactivate CTRL
+AC -> SBPMF : createAcknowledgeRequest()
+activate SBPMF
+return ackRequest
+AC -> DOS : writeUTF(ackRequest)
+activate DOS
+deactivate DOS
+deactivate AC
+
+@enduml

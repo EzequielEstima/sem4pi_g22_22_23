@@ -1,0 +1,19 @@
+-----------------Short Answer Question-----------------
+
+Short Answer
+(numberOfPoints pts)
+Question
+Solution: phrase
+Feedback: phrase
+
+--------------------------------------------------------
+----------------Short Answer Question Example-----------
+
+Short Answer
+(3pts)
+Capital of Brazil?
+Solution: Brasilia
+Feedback: Very good
+
+
+--------------------------------------------------------

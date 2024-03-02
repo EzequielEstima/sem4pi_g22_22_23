@@ -1,0 +1,133 @@
+@startuml
+actor Manager as M
+participant "<<Presentation>>\n:OpenCloseCourseEnrollmentsUI" as UI
+control "<<Application>>\n:OpenCloseCourseEnrollmentsController" as CTRL
+participant "<<Service>>\n:OpenCloseCourseEnrollmentsService" as OCESv
+participant "<<Persistence>>\n:PersistenceContext" as PC
+participant "<<Factory>>\nfactory:RepositoryFactory" as RF
+participant "<<DTO>>\ncourseDTOWithIdTitleStatusList\n:List<CourseDTOWithIdTitleStatus>" as cDtoL
+participant "<<DTO>>\n:CourseMapper" as CM
+database "<<Repository>>\ncourseRepository\n:CourseRepository" as CR
+participant "<<Domain>>\ncourseList:List<Course>" as CL
+participant "<<DTO>>\ncourseDTOBuilder\n:CourseDTOBuilder" as cDTOBuilder
+participant "<<Domain>>\ncourse:Course" as C
+participant "<<Domain>>:\nCourseTitle" as CT
+participant "<<Domain>>:\nCourseIdentifier" as CI
+participant "<<Domain>>:\nCourseStatus" as CS
+participant "<<DTO>>\ncourseDTO:\nCourseDTOWithIdTitleStatus" as cDTO
+
+M -> UI : The manager initializes the process\n of open/close the course enrollments
+activate M
+activate UI
+UI -> CTRL : create()
+activate CTRL
+CTRL -> OCESv : create()
+activate OCESv
+OCESv -> PC : repositories
+activate PC
+PC --> OCESv : factory
+deactivate PC
+OCESv -> RF : courseRepository()
+activate RF
+RF -> CR : create()
+RF --> OCESv: courseRepository
+deactivate RF
+deactivate OCESv
+deactivate CTRL
+UI -> CTRL : listAllOpenCLoseEnrollmentsAvailableCourses()
+activate CTRL
+CTRL -> OCESv : listAllOpenCLoseEnrollmentsAvailableCourses()
+activate OCESv
+OCESv -> CR : listAllOpenCLoseEnrollmentsAvailableCourses()
+activate CR
+CR -> CL : create()
+CR --> OCESv : courseList
+deactivate CR
+OCESv -> cDtoL : create()
+loop foreach course from courseList
+OCESv -> CM : toDTOWithIdTitleStatus(course)
+activate CM
+CM -> cDTOBuilder : create()
+CM -> C : returnCourseIdentifierString()
+activate C
+C -> CI : returnCourseIdentifierString()
+activate CI
+CI --> C : courseId
+deactivate CI
+C --> CM : courseId
+deactivate C
+CM -> cDTOBuilder : withCourseIdentifier(courseId)
+activate cDTOBuilder
+deactivate cDTOBuilder
+CM -> C : returnCourseTitleString()
+activate C
+C -> CT : returnCourseTitleString()
+activate CT
+CT --> C : courseTitle
+deactivate CT
+C --> CM : courseTitle
+deactivate C
+CM -> cDTOBuilder : withCourseTitle(courseTitle)
+activate cDTOBuilder
+deactivate cDTOBuilder
+CM -> C : returnCourseStatusString()
+activate C
+C -> CS : returnCourseStatusString()
+activate CS
+CS -> CS : name()
+CS --> C : courseStatus
+deactivate CS
+C --> CM : courseStatus
+deactivate C
+CM -> cDTOBuilder : withCourseStatus(courseStatus)
+activate cDTOBuilder
+deactivate cDTOBuilder
+CM -> cDTOBuilder : buildWithIdTitleStatus()
+activate cDTOBuilder
+cDTOBuilder -> cDTO : create()
+cDTOBuilder --> CM : courseDTOWithIdTitleStatus
+deactivate cDTOBuilder
+CM --> OCESv : courseDTOWithIdTitleStatus
+deactivate CM
+deactivate CM
+OCESv -> cDtoL : add(courseDTOWithIdTitleStatus)
+activate cDtoL
+deactivate cDtoL
+end loop
+OCESv --> CTRL : courseDTOList
+deactivate OCESv
+CTRL --> UI : courseDTOList
+deactivate CTRL
+UI --> M : The system presents a list of the courses \nthat are available to open/close enrollments
+deactivate UI
+M -> UI : The Manager selects the Course \nwhose Status he wants to change
+activate UI
+UI --> M : Displays the options close/open enrollments
+deactivate UI
+M -> UI : Chooses the option (newStatus)
+activate UI
+UI -> CTRL : changeStatus(selectedCourseDTO, newStatus)
+activate CTRL
+CTRL -> OCESv : changeStatus(selectedCourseDTO, newStatus)
+activate OCESv
+OCESv -> CI : create(selectedCourseDTO.courseIdentifier)
+OCESv -> CM : toCourse(courseIdentifier, courseRepository)
+activate CM
+CM -> CR : ofIdentity(courseIdentifier)
+activate CR
+CR --> CM : course
+deactivate CR
+CM --> OCESv : course
+deactivate CM
+OCESv -> C : changeStatus(newStatus)
+activate C
+deactivate C
+OCESv -> CR : save(course)
+activate CR
+deactivate CR
+deactivate OCESv
+deactivate CTRL
+UI --> M : The System changes the Status and\n informs the operation success
+deactivate UI
+deactivate M
+@enduml

@@ -1,0 +1,108 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant "ListTeacherExamsController" as ctrl <<Application>>
+participant "ListTeacherExamsService" as service <<Service>>
+
+participant PersistenceContext as persistence <<persistence>>
+participant RepositoryFactory as repFactory <<factory>>
+
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+
+
+
+database "TeacherRepository" as teaRep <<Repository>>
+database ExamRepository as examRep <<Repository>>
+database CourseRepository as courseRep <<Repository>>
+
+participant "ExamDTOWithDatesExamTitleCourseIdMapper" as em <<DTO>>
+participant "ExamDTOWithDatesExamTitleCourseIdBuilder" as builder <<DTO>>
+participant "ExamDTOWithDatesExamTitleCourseId" as dto <<DTO>>
+
+
+
+
+
+activate ctrl
+ctrl ->service: create()
+activate service
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: teacherRepository()
+activate repFactory
+repFactory -> teaRep: create
+repFactory --> service: teacherRepository
+deactivate repFactory
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: examRepository()
+activate repFactory
+repFactory -> examRep: create
+repFactory --> service: examRepository
+deactivate repFactory
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: courseRepository()
+activate repFactory
+repFactory -> courseRep: create
+repFactory --> service: courseRepository
+deactivate repFactory
+deactivate service
+
+ctrl -> service: listTeacherExams()
+activate service
+service -> auth: authorizationService()
+activate auth
+auth -> service: authz
+deactivate auth
+service -> authSV: session()
+activate authSV
+authSV --> service: userSession
+deactivate authSV
+service -> userSe: authenticatedUser()
+activate userSe
+userSe --> service : systemUser
+deactivate userSe
+service -> teaRep : findTeacherBySystemUser(systemUser)
+activate teaRep
+teaRep --> service: teacher
+deactivate teaRep
+service -> examRep: findTeacherExams(teacher)
+activate examRep
+examRep -> service: listExams
+deactivate examRep
+
+loop foreach exam from listExams
+service -> em : toDTO(exam, course)
+activate em
+em -> builder: create()
+em -> builder: withDatesExamIdCourseId(initialDate,finalDate,examTitle,courseID)
+em -> builder: build()
+activate builder
+builder -> dto: create(initialDate,finalDate,examTitle,courseID)
+activate dto
+dto-->builder: examDTOWithDatesExamTitleCourseId
+deactivate dto
+builder --> em: examDTOWithDatesExamTitleCourseId
+end loop
+deactivate builder
+return examDTOWithDatesExamTitleCourseId
+return listExamDTOWithDatesExamTitleCourseId
+
+deactivate em
+
+
+@enduml

@@ -1,0 +1,152 @@
+@startuml
+actor User as U
+participant "<<Presentation>>\n:CreateBoardUI" as UI
+control "<<Application>>\n:CreateBoardController" as CTRL
+participant "<<Service>>\n:CreateBoardService" as CBSv
+participant "<<Persistence>>\n:PersistenceContext" as PC
+participant "<<Factory>>\nfactory:RepositoryFactory" as RF
+database "<<Repository>>\nboardRepository\n:BoardRepository" as BR
+database "<<Repository>>\npersonRepository\n:PersonRepository" as PR
+database "<<Repository>>\nboardOwnerRepository\n:BoardOwnerRepository" as BOR
+database "<<Repository>>\nboardHistoryRepository\n:BoardHistoryRepository" as BHR
+participant "<<Domain>>\n:BoardBuilder" as BB
+participant "<<Domain>>\n:List<Cell>" as CL
+participant "<<Domain>>\n:CellBuilder" as CB
+participant "<<Domain>>\n:Cell" as C
+participant "<<Domain>>\nboard\n:Board" as B
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+participant "<<Domain>>\n:BoardOwner" as BO
+participant "<<Domain>>\n:BoardOwnerBuilder" as BOB
+participant "<<Domain>>\nperson\n:Person" as P
+participant "<<Domain>>\n:BoardHistoryBuilder" as BHB
+participant "<<Domain>>\nboardHistory\n:BoardHistory" as BH
+participant "<<Domain>>\n:TaskBuilder" as TB
+participant "<<Domain>>\ntask\n:Task" as T
+
+U -> UI : The user initializes the \nprocess of creating a board
+activate U
+activate UI
+UI -> CTRL : create()
+activate CTRL
+CTRL -> CBSv : create()
+activate CBSv
+CBSv -> PC : repositories
+activate PC
+PC --> CBSv : factory
+deactivate PC
+CBSv -> RF : boardRepository()
+activate RF
+RF -> BR : create()
+RF --> CBSv: boardRepository
+deactivate RF
+CBSv -> RF : personRepository()
+activate RF
+RF -> PR : create()
+RF --> CBSv : personRepository
+deactivate RF
+CBSv -> RF : boardOwnerRepository()
+activate RF
+RF -> BOR : create()
+return boardOwnerRepository
+CBSv -> RF : boardHistoryRepository()
+activate RF
+RF -> BHR : create()
+return boardHistoryRepository
+deactivate CBSv
+deactivate CTRL
+UI --> U : The system requests \nthe board relevant data\n(title, rowNumber, columnNumber)
+deactivate UI
+U -> UI : The user inserts the requested data\n(title, rowNumber, columnNumber)
+activate UI
+UI --> U : The system shows the inserted data \nand asks for confirmation
+deactivate UI
+U -> UI : The user confirms
+activate UI
+UI -> CTRL : createBoard(title, rowNumber, columnNumber)
+activate CTRL
+CTRL -> CBSv : createBoard(title, rowNumber, columnNumber)
+activate CBSv
+CBSv -> BR : ofIdentify(title)
+activate BR
+BR --> CBSv : board
+deactivate BR
+alt if no board was found with the inserted title
+CBSv -> BB : create()
+CBSv -> BB : buildBoard(title, rowNumber, columnNumber)
+activate BB
+BB -> CL : create()
+loop for rowNumber x columnNumber times
+BB -> CB : buildCell(id)
+activate CB
+CB -> C : create(id)
+CB --> BB : cell
+deactivate CB
+BB -> CL : add()
+activate CL
+deactivate CL
+end loop
+BB -> B : create(title, cellList)
+BB --> CBSv : board
+deactivate BB
+CBSv -> BR : save
+CBSv -> auth: authorizationService()
+activate auth
+auth -> CBSv: authz
+deactivate auth
+CBSv -> authSV: session()
+activate authSV
+authSV --> CBSv: userSession
+deactivate authSV
+CBSv -> userSe: authenticatedUser()
+activate userSe
+return systemUser
+CBSv -> PR : findPersonBySystemUser(systemUser)
+activate PR
+return person
+alt if person is board owner
+CBSv -> BOR : findBoardOwnerByPerson(person)
+activate BOR
+return boardOwner
+CBSv -> BO : addBoard(board)
+activate BO
+return boolean
+CBSv -> BOR : save(boardOwner)
+activate BOR
+deactivate BOR
+end
+alt else
+CBSv -> BOR : count()
+activate BOR
+return totalOfBoardOwnerIds
+CBSv -> BOB : create()
+CBSv -> BOB : build()
+activate BOB
+return boardOwner
+CBSv -> P : addBoardOwner(boardOwner)
+activate P
+deactivate P
+CBSv -> PR : save(person)
+activate PR
+deactivate PR
+end
+CBSv -> BHB : create()
+CBSv -> BHB : build()
+activate BHB
+BHB -> TB : build()
+activate TB
+TB -> T : create()
+return task
+BHB -> BH : create()
+return boardHistory
+CBSv -> BHR : save(boardHistory)
+end
+activate BR
+deactivate BR
+deactivate CBSv
+deactivate CTRL
+UI --> U : The system shows the operation\n success
+deactivate UI
+deactivate U
+@enduml

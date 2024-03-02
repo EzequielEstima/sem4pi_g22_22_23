@@ -1,0 +1,28 @@
+@startuml
+autonumber
+title ShareBoard - SharedBoardClient
+
+actor "User" as User
+
+participant ": ShareBoardUI" as UI <<ShareBoardClient>> <<Presentation>>
+participant ": SBPMessageFormat" as SBPF
+participant ": DataOutputStream" as DOS
+participant ": DataInputStream" as DIS
+activate User
+User -> UI : chooses board, permission and \nparticipant email
+activate UI
+
+
+UI -> SBPF : createShareBoardRequest(boardTitle, email, permission)
+activate SBPF
+return shareBoardRequest
+
+UI -> DOS : writeUTF(shareBoardRequest)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return : informs operation success
+deactivate UI
+@enduml

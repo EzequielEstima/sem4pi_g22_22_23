@@ -1,0 +1,42 @@
+@startuml
+autonumber
+
+participant ": ApproveRejectEnrollmentService" as ARES <<Service>>
+participant ": StudentMapper" as SM <<DTO>>
+participant ": StudentDTOBuilder" as SB <<Builder>>
+participant ": Student" as S <<Domain>>
+participant ": MechanographicNumber" as SMN <<Domain>>
+participant ": StudentDTOWithMechNumber" as SDTO <<DTO>>
+
+
+
+[o-> SM : toDTOWithMechNumber(student)
+activate SM
+SM -> SB : create()
+activate SB
+deactivate SB
+SM -> S : returnMechanographicNumberString()
+activate S
+S -> SMN : toString()
+activate SMN
+SMN --> S : mechanographicNumber
+deactivate SMN
+S --> SM : mechanographicNumber
+deactivate S
+SM -> SB : withMechanographicNumber()
+activate SB
+SB --> SM : studentDTOBuilder
+deactivate SB
+
+deactivate SB
+SM -> SB : buildWithMechNumber
+activate SB
+SB -> SDTO : create(mechanographicNumber)
+activate SDTO
+deactivate SDTO
+SB --> SM : studentDTO
+deactivate SB
+SM -->o[ : studentDTO
+deactivate SM
+
+@enduml

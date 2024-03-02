@@ -1,0 +1,53 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+
+participant "ListActiveUsersController" as ctrl <<application>>
+participant AuthorizationService as authSV <<application>>
+
+participant ListUserService as service <<application>>
+participant AuthzRegistry as auth <<application>>
+participant UserManagementService as userManSV <<application>>
+participant SystemUser as sU  <<domain>>
+participant GeneralDTO as dto  <<DTO>>
+
+database UserRepository as userRep <<repository>>
+
+activate ctrl
+
+ctrl -> authSV : ensureAuthenticatedUserHasAnyOf(BaseRoles.POWER_USER, BaseRoles.MANAGER)
+ctrl -> service : create
+ctrl -> service : listActiveUsers()
+activate service
+service -> auth: userService()
+activate auth
+auth --> service: userSvc
+deactivate auth
+service->userManSV : activeUsers()
+activate userManSV
+userManSV -> userRep : findByActive(boolean)
+activate userRep
+userRep --> userManSV : Iterable<SystemUser>
+deactivate userRep
+userManSV --> service : Iterable<SystemUser>
+deactivate userManSV
+
+loop for all SystemUser in Iterable
+service -> sU : SystemUser.toDto()
+activate sU
+sU -> dto: create("user")
+activate dto
+sU -> dto: put("username", username.toString());
+sU -> dto: put("name", name.toString());
+sU -> dto: put("email", email.toString());
+sU -> dto: put("roles", roles.roleTypes().toString());
+deactivate dto
+sU --> service : GeneralDTO
+deactivate sU
+end loop
+service -->ctrl : listUsersDTO
+deactivate service
+
+@enduml

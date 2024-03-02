@@ -1,0 +1,71 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor Manager
+
+participant "DeactivateUserUI" as ui <<presentation>>
+participant "DeactivateUserController" as ctrl <<application>>
+participant AuthorizationService as authSV <<application>>
+participant ListActiveUserController as listCtrl <<application>>
+participant DeactivateUserService as deactivateSer <<application>>
+participant AuthzRegistry as auth <<application>>
+
+participant UserManagementService as userManSV <<application>>
+participant SystemUser as sU  <<domain>>
+
+database UserRepository as userRep <<repository>>
+
+
+Manager -> ui : Select option deactivateUser
+activate Manager
+activate ui
+ui -> ctrl: create()
+activate ctrl
+ctrl -> auth: authorizationService()
+activate auth
+auth --> ctrl: authz
+deactivate auth
+deactivate ctrl
+
+ui->ctrl: listActiveUsers()
+activate ctrl
+ctrl -> authSV : ensureAuthenticatedUserHasAnyOf(BaseRoles.POWER_USER, BaseRoles.MANAGER)
+ctrl -> listCtrl : create()
+ctrl -> listCtrl : listAllActiveUsers()
+activate listCtrl
+listCtrl -->ctrl : listUsersDTO
+note right: for more information abou this method check \n SD_ListActiveUserController in folder us_1001
+deactivate listCtrl
+ctrl --> ui : listUsersDTO
+deactivate ctrl
+ui --> Manager: shows list of active users
+Manager -> ui: selects one
+ui -> ctrl: deactivateUser(systemUserDTO)
+activate ctrl
+ctrl -> authSV : ensureAuthenticatedUserHasAnyOf(BaseRoles.POWER_USER, BaseRoles.MANAGER)
+ctrl -> listCtrl : create()
+ctrl -> deactivateSer: deactivateUser(systemUserDTO)
+activate deactivateSer
+
+deactivateSer -> auth: userService()
+activate auth
+auth --> deactivateSer: userSvc
+deactivate auth
+
+deactivateSer -> userManSV: userOfIdentity(username)
+activate userManSV
+return sytemUser
+
+deactivateSer -> userManSV: deactivateUser(systemUser)
+activate userManSV
+userManSV -> sU: deactivate(Current Time)
+userManSV -> userRep: save(systemUser)
+return (systemUser)
+return boolean
+return boolean
+return Informs if operation was Success
+
+deactivate Manager
+@enduml

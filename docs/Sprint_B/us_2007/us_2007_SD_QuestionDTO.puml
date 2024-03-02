@@ -1,0 +1,39 @@
+@startuml
+autonumber
+
+participant ": ListQuestionsService" as AUQS <<Service>>
+participant ": QuestionDTOWithIdMapper" as QM <<DTO>>
+participant ": QuestionDTOWithIdBuilder" as QB <<Builder>>
+participant ": Question" as Q <<Domain>>
+
+participant ": QuestionIdentifier" as CI <<Domain>>
+participant ": QuestionDTOWithId" as QDTO <<DTO>>
+
+[o-> QM : toDTO(question)
+activate QM
+QM -> QB : create()
+activate QB
+deactivate QB
+QM -> Q : returnQuestionIdentifier()
+activate Q
+Q -> CI : toString()
+activate CI
+CI --> Q : questionIdentifier
+deactivate CI
+Q --> QM : questionIdentifier
+deactivate Q
+QM -> QB : withQuestionIdentifier()
+activate QB
+QB --> QM : questionDTOBuilder
+deactivate QB
+QM -> QB : build()
+activate QB
+QB -> QDTO : create(questionIdentifier)
+activate QDTO
+deactivate QDTO
+QB --> QM : questionDTO
+deactivate QB
+QM -->o[ : questionDTO
+deactivate QM
+
+@enduml

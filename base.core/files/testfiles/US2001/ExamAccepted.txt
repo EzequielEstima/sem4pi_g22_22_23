@@ -1,0 +1,84 @@
+#Title: exam1
+
+#Type of grade: on-submission
+#Type of feedback: on-submission
+#Header description: Header exam1
+
+#Section: 1
+#Section description: section1
+
+#Points: 10
+#Question: Match the Capital with the Country
+
+Capital:
+-Ottawa
+-Rome
+-Tokyo
+
+Country:
+- Canada
+- Italy
+- Japan
+
+#Answer:
+#Solution: Tokyo-Japan, Rome-Italy, Ottawa-Canada
+#Feedback: Here the solution should be Tokyo-Japan, Rome-Italy, Ottawa-Canada.
+
+#Points: 10
+#Question: Is a platypus a mammal?
+#Answer:
+#Solution: T
+#Feedback: Despite laying eggs, platypus is a mammal.
+
+#Section: 2
+
+#Points: 10
+#Question: How long is 5ft in meters?
+#Answer:
+#Solution: 1,52 m
+#Feedback: This is a simple conversion question
+
+#Points: 10
+#Question: Please select the correct missing words.
+The best island in Portugal is ||WORD||
+
+WORD:
+-Madeira
+-Porto Santo
+-Berlengas
+-Ilhéu da Pontinha
+
+#Answer:
+#Solution: Berlengas
+
+#Section: 3
+
+#Points: 10
+#Question: Capital of Brazil?
+#Answer:
+#Solution: Brasilia
+#Feedback: Its Brasilia
+
+#Points: 20
+#Question: What is the Capital of Japan?
+Select one option:
+-Seoul
+-Ottawa
+-Rome
+-Tokyo
+
+#Answer:
+#Solution: Tokyo
+
+#Points: 20
+#Question: Which states cities are from the United States?
+Select multiple options:
+-Seoul
+-Ottawa
+-Rome
+-New York
+-Lisbon
+-Los Angeles
+
+#Answer:
+#Solution: New York, Los Angeles

@@ -1,0 +1,53 @@
+@startuml
+autonumber
+title Update Question
+
+actor "Teacher" as T
+
+participant ": UpdateQuestionUI" as UI <<Presentation>>
+control "UpdateQuestionController" as CTRL <<Application>>
+participant ": AddUpdateQuestionService" as AUQS <<Service>>
+
+participant ": Question" as Q <<Domain>>
+participant ": QuestionId" as QI <<Domain>>
+participant ": VerifyQuestionService" as VQS <<Service>>
+participant ": Structure" as St <<Domain>>
+database QuestionRepository as QR <<Repository>>
+
+activate T
+T -> UI : chooses a question and inserts the \npath of the new version
+activate UI
+
+UI -> CTRL : updateQuestion(questionDTO, updatedQuestion)
+activate CTRL
+
+CTRL -> AUQS : updateQuestion(questionDTO, updatedQuestion)
+activate AUQS
+AUQS -> QI : create(questionDTO.questionId)
+activate QI
+deactivate QI
+AUQS -> QR : ofIdentity(QuestionId)
+activate QR
+QR --> AUQS : question
+deactivate QR
+AUQS -> VQS : verifyQuestion(updatedQuestion)
+activate VQS
+VQS --> AUQS : true
+deactivate VQS
+AUQS -> St : create(updatedQuestion)
+activate St
+deactivate St
+AUQS -> Q : changeQuestion(Structure)
+activate Q
+deactivate Q
+
+
+AUQS -> QR : save(question)
+activate QR
+deactivate QR
+deactivate AUQS
+deactivate CTRL
+
+UI--> T : informs operation success
+
+@enduml

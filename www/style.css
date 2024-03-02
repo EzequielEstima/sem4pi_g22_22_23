@@ -1,0 +1,40 @@
+body{
+    margin: 0;
+    background: honeydew;
+}
+
+h1{
+    font-family: "Baskerville Old Face";
+    font-size: 5em;
+    color: #77aa77;
+    text-align: center;
+}
+
+.table{
+    table-layout: auto;
+    text-align: center;
+    overflow-wrap: break-word;
+}
+
+.table td{
+    border: solid black 1px ;
+    color: black;
+    font-size: 1em;
+    padding: 8px;
+    text-align: center;
+    background-color: wheat;
+    overflow-wrap: break-word;
+}
+
+.table th{
+    color: red;
+    text-align: center;
+    font-size: 1.2em;
+    padding: 8px;
+    background-color: #f2f2f2;
+    overflow-wrap: break-word;
+}
+
+.hr{
+
+}

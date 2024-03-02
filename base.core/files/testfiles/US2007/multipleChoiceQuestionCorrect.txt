@@ -1,0 +1,12 @@
+#Multiple Choice
+#Points: 20
+
+#Question: Here's an introduction
+Options:
+-option1
+-option2
+-option3
+
+#Answer:
+#Solution: option1
+#Feedback: Here's your feedback

@@ -1,0 +1,57 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor Teacher
+
+participant "RescheduleClassUI" as UI <<application>>
+participant "RescheduleClassController" as Controller <<application>>
+participant "RescheduleClassService" as Service <<application>>
+
+
+participant "ScheduleDate" as Date <<domain>>
+participant "WeeklyDate" as Weekly <<domain>>
+participant "Class" as Class <<domain>>
+participant "PersistenceContext" as Persistence <<persistence>>
+participant "RepositoryFactory" as Factory <<factory>>
+
+database "ClassRepository" as Repository <<repository>>
+
+activate Teacher
+activate UI
+
+Teacher -> UI : input from teacher
+
+UI -> Controller : reeschedule(List<Weekly>, List<Integer>, ClassWithIdAndTittleDTO)
+activate Controller
+Controller -> Service : reeschedule(List<Weekly>, List<Integer>, ClassWithIdAndTittleDTO)
+activate Service
+loop for each date
+Service -> Date : create
+end
+
+Service -> Weekly : create
+
+Service -> Repository : findById(classDTO.id)
+Repository -> Service : class
+
+Service -> Class : reeschedule(WeeklyDate)
+
+Class -> Service : returns true
+
+Service -> Repository : save(class)
+
+Repository -> Service : returns true
+
+Service -> Controller : returns true
+deactivate Service
+Controller -> UI : returns true
+deactivate Controller
+UI -> Teacher : The system notifies that the class has been rescheduled
+
+
+deactivate UI
+deactivate Teacher
+deactivate Controller
+@enduml

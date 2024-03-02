@@ -1,0 +1,61 @@
+@startuml
+autonumber
+title ArchiveBoard - SharedBoardServer
+
+participant ": AttendClient" as UI <<UI>>
+participant ": DataInputStream" as DIS
+participant ": ArchiveBoardRequest" as ABR <<UI>>
+participant ": SBPMessageFormat" as SBPMF
+participant ": DataOutputStream" as DOS
+control "ArchiveBoardController" as CTRL <<ShareBoardServer>> <<Application>>
+participant ": ArchiveBoardService" as SBS <<Service>>
+participant ": Board" as B <<Domain>>
+participant ": Notification" as N <<Domain>>
+participant ": TaskBuilder" as TB <<Builder>>
+database ": BoardRepository" as BR <<Repository>>
+participant ": AddNotificationService" as ANS <<Service>>
+participant ": AddTaskToBoardHistoryService" as ATTBHS <<Service>>
+activate UI
+UI -> DIS : readUTF()
+activate DIS
+return message
+UI -> SBPMF : decodeFormat(message)
+activate SBPMF
+return arrayFormat
+UI -> ABR : archiveBoard(message, outputStream)
+activate ABR
+ABR -> SBPMF : decodeParams(message)
+activate SBPMF
+return params
+ABR -> CTRL : archiveBoard(boardTitle)
+activate CTRL
+CTRL -> SBS : archiveBoard(boardTitle)
+activate SBS
+SBS -> BR : findBoardByTitle(boardTitle)
+activate BR
+return board
+SBS -> B : archiveBoard()
+activate B
+return true
+SBS -> BR : save(board)
+activate BR
+deactivate BR
+SBS -> ANS : addNotification(message, boardTitle)
+activate ANS
+return true
+SBS -> ATTBHS : addArchiveBoardTaskToHistory(boardTitle)
+activate ATTBHS
+return true
+SBS --> CTRL : true
+deactivate SBS
+CTRL --> ABR : true
+deactivate CTRL
+ABR -> SBPMF : createAcknowledgeRequest()
+activate SBPMF
+return ackRequest
+ABR -> DOS : writeUTF(ackRequest)
+activate DOS
+deactivate DOS
+deactivate ABR
+deactivate UI
+@enduml

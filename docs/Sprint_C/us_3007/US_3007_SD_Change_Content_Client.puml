@@ -1,0 +1,35 @@
+@startuml
+autonumber
+title ChangePostItContent - SharedBoardClient
+
+actor "User" as User
+
+participant "ChangePostItContentUI" as UI <<ShareBoardClient>> <<Presentation>>
+participant "SBPMessageFormat" as SBPF
+participant "DataOutputStream" as DOS
+participant "DataInputStream" as DIS
+activate User
+User -> UI : chooses boardTitle and post-it
+activate UI
+
+UI -> UI : sendChangePostItContentRequest(boardTitle, row, column, content)
+activate UI
+UI -> SBPF : createChangePostItContentRequest(boardTitle, row, column, content)
+activate SBPF
+return changePostItContentRequest
+UI -> DOS : create(socket)
+activate DOS
+deactivate DOS
+UI -> DIS : create(socket)
+activate DIS
+deactivate DIS
+UI -> DOS : writeUTF(changePostItContentRequest)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return true
+return informs operation success
+deactivate UI
+@enduml

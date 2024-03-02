@@ -1,0 +1,117 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor Manager
+
+participant "SetTeacherUI" as UI <<presentation>>
+participant "RequestInformationToSetTeachersController" as Controller <<application>>
+participant "SetTeacherService" as Service <<application>>
+
+participant "Course" as Course <<domain>>
+participant "PersistenceContext" as Persistence <<persistence>>
+participant "RepositoryFactory" as Factory <<factory>>
+
+participant "TeacherMapper" as TeacherMapper <<Mapper>>
+participant "CourseMapper" as CourseMapper <<Mapper>>
+
+participant "TeacherToDTOBuilder" as TeacherToDTOBuilder
+participant "CourseToDTOBuilder" as CourseToDTOBuilder
+
+participant "TeacherWithFullNameAndAcronymDTO" as TeacherDTO
+participant "CourseWithNameAndIdentifier" as CourseDTO
+
+database "TeacherRepository" as TeacherRepository <<repository>>
+database "CourseRepository" as CourseRepository <<repository>>
+
+activate Manager
+activate UI
+
+Manager -> UI: wants to set a teacher
+
+
+UI -> Controller : requestInformation()
+activate Controller
+Controller -> Service : requestInformation()
+activate Service
+
+Service -> Persistence: PersistenceContext.repositories()
+activate Persistence
+Persistence -> Factory: create
+Persistence -> Service: factory
+deactivate Persistence
+Service -> Factory: teachers()
+activate Factory
+Factory -> TeacherRepository: create
+Factory -> Service: teacherRepository
+deactivate Factory
+Service -> TeacherRepository: findAllTeachers()
+TeacherRepository -> Service: teacherList
+Service -> Service : teacherList
+
+
+
+Service -> Service : getListOfCourses()
+
+
+
+Service -> Persistence: PersistenceContext.repositories()
+activate Persistence
+Persistence -> Factory: create
+Persistence -> Service: factory
+deactivate Persistence
+Service -> Factory: courses()
+activate Factory
+Factory -> CourseRepository: create
+Factory -> Service: courseRepository
+deactivate Factory
+Service -> CourseRepository: findAllCourses()
+CourseRepository -> Service: coursesList
+Service -> Service : coursesList
+
+
+
+Service -> TeacherMapper : teacherWithFullNameAndAcronymToDTO(Teacher)
+activate TeacherMapper
+
+TeacherMapper -> TeacherToDTOBuilder: buildWithFullName()
+TeacherMapper -> TeacherToDTOBuilder: buildWithAcronym()
+TeacherMapper -> TeacherToDTOBuilder : build()
+activate TeacherToDTOBuilder
+TeacherToDTOBuilder -> TeacherDTO : create
+TeacherToDTOBuilder -> TeacherMapper : teacherWithFullNameAndAcronymDTO
+deactivate TeacherToDTOBuilder
+TeacherMapper -> Service : teacherWithFullNameAndAcronymDTO
+
+deactivate TeacherMapper
+
+
+
+Service -> CourseMapper : courseWithCourseIdentifierAndCourseNameToDTO(Teacher)
+activate CourseMapper
+
+CourseMapper -> CourseToDTOBuilder: buildWithName()
+CourseMapper -> CourseToDTOBuilder: buildWithIdentifier()
+CourseMapper -> CourseToDTOBuilder : build()
+activate CourseToDTOBuilder
+CourseToDTOBuilder -> CourseDTO : create
+CourseToDTOBuilder -> CourseMapper : courseWithNameAndIdentifier
+deactivate CourseToDTOBuilder
+CourseMapper -> Service : courseWithNameAndIdentifier
+
+deactivate CourseMapper
+
+
+
+Service -> Controller : return Pair<List<DTO>,List<DTO>>
+
+deactivate Service
+
+Controller -> UI : return Pair<List<DTO>,List<DTO>>
+
+UI->Manager : show information
+
+deactivate Controller
+
+@enduml

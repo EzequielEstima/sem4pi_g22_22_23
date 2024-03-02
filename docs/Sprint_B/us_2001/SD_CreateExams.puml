@@ -1,0 +1,166 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+actor "Teacher" as t
+
+participant "CreateExamsUI" as ui <<Presentation>>
+participant "CreateExamsController" as ctrl <<Application>>
+participant "ListCourseController" as ctrlList <<Application>>
+participant "CreateUpdateExamService" as service <<Service>>
+
+
+participant AuthzRegistry as auth <<application>>
+participant AuthorizationService as authSV <<application>>
+participant UserSession as userSe <<Domain>>
+
+participant PersistenceContext as persistence <<persistence>>
+participant RepositoryFactory as repFactory <<factory>>
+
+participant "ExamBuilder" as builder <<Builder>>
+participant "Exam" as exam <<Domain>>
+participant "VerifyExamSpecificationService" as verExam <<Service>>
+participant CourseIdentifier as courseID <<domain>>
+participant "Course" as course <<Domain>>
+database "TeacherRepository" as teaRep <<Repository>>
+database ExamRepository as examRep <<Repository>>
+database CourseRepository as courseRep <<Repository>>
+
+
+activate t
+t -> ui: Select option creates exam
+activate ui
+
+
+ui-> ctrl : create()
+ui -> ctrl: listCourses()
+activate ctrl
+ctrl -> ctrlList: listCourses()
+activate ctrlList
+note right : For more information about the function listCourse check \n SD_ListCourse present in the folder us_1006
+ctrlList --> ctrl: listCourseDto
+deactivate ctrlList
+ctrl --> ui: listCourseDto
+deactivate ctrl
+
+ui --> t: shows list of courses the teacher teaches
+t -> ui: selects a course
+ui --> t: asks for the path to exam file, and the initial and final date
+t -> ui: inserts data
+
+ui-> ctrl: createExam(structure,courseDto,initialDate,finalDate)
+
+
+
+
+
+activate ctrl
+ctrl -> service : create()
+activate service
+
+
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: teacherRepository()
+activate repFactory
+repFactory -> teaRep: create
+repFactory --> service: teacherRepository
+deactivate repFactory
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: examRepository()
+activate repFactory
+repFactory -> examRep: create
+repFactory --> service: examRepository
+deactivate repFactory
+service -> persistence: repositories()
+activate persistence
+persistence -> repFactory: create
+persistence --> service: factory
+deactivate persistence
+service -> repFactory: courseRepository()
+activate repFactory
+repFactory -> courseRep: create
+repFactory --> service: courseRep
+deactivate repFactory
+
+
+deactivate persistence
+deactivate service
+ctrl -> service : createExam(structure,courseDto,initialDate,finalDate)
+activate service
+
+service -> auth: authorizationService()
+activate auth
+auth -> service: authz
+deactivate auth
+service -> authSV: session()
+activate authSV
+authSV --> service: userSession
+deactivate authSV
+service -> userSe: authenticatedUser()
+activate userSe
+userSe --> service : systemUser
+deactivate userSe
+
+
+
+
+service -> teaRep : findTeacherBySystemUser(systemUser)
+activate teaRep
+teaRep --> service: teacher
+deactivate teaRep
+
+
+
+service -> examRep: count()
+activate examRep
+examRep --> service: numberOfExams
+deactivate examRep
+
+service -> builder: withExamSpecification(structure)
+activate builder
+builder -> verExam: verifyExamSpecification(structure)
+activate verExam
+verExam --> builder: boolean
+deactivate verExam
+deactivate builder
+
+service -> builder: withDateInterval(initialDate,finalDate)
+service -> builder: withTeacher(teacher)
+
+service -> builder: build()
+activate builder
+builder -> exam: create(examTitle,dateInterval,specification)
+activate exam
+exam --> builder: exam
+deactivate exam
+builder --> service: exam
+deactivate builder
+
+
+service -> courseID : create(courseIdentifier)
+service -> courseRep: ofIdentity(courseId)
+activate courseRep
+courseRep --> service : course
+deactivate courseRep
+
+service -> course : addExam(exam)
+service -> examRep : save(exam)
+service -> courseRep: save(course)
+
+service --> ctrl: boolean
+deactivate service
+ctrl --> ui: boolean
+deactivate ctrl
+ui --> t : Informs operation success
+
+deactivate t
+@enduml

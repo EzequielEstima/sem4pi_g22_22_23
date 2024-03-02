@@ -1,0 +1,28 @@
+@startuml
+autonumber
+
+title List Post-It - SharedBoardClient
+
+actor "User" as User
+
+participant ": CreatePostItUI" as UI <<SharedBoardClient>> <<Presentation>>
+participant ": SBPMessageFormat" as SBPF
+participant ": DataOutputStream" as DOS
+participant ": DataInputStream" as DIS
+activate User
+User -> UI : wants to see the boards that he participates in
+activate UI
+
+UI -> SBPF : createListBoardIParticipateRequestSend()
+activate SBPF
+return listBoardIParticipateRequest
+
+UI -> DOS : writeUTF(listBoardIParticipateRequest)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return : show Board List
+
+@enduml

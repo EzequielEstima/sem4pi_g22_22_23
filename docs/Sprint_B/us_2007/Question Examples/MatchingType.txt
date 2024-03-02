@@ -1,0 +1,28 @@
+-----------------Matching Type Question-----------------
+
+Question
+
+List One Name:
+- Example1
+- Example2
+
+List Two Name:
+- Example1
+- Example2
+
+---------------------------------------------------------
+----------------Matching Type Question Example-----------
+
+Match the Capital with the Country
+
+Capital:
+-Ottawa
+-Rome
+-Tokyo
+
+Country:
+- Canada
+- Italy
+- Japan
+
+------------------------------------------------------------

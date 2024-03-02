@@ -1,0 +1,31 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+@startuml
+autonumber
+
+title Create Post-It - SharedBoardClient
+
+actor "User" as User
+
+participant ": CreatePostItUI" as UI <<SharedBoardClient>> <<Presentation>>
+participant ": SBPMessageFormat" as SBPF
+participant ": DataOutputStream" as DOS
+participant ": DataInputStream" as DIS
+activate User
+User -> UI : chooses board
+activate UI
+
+UI -> SBPF : createPostItRequest(board,data2,selectedColumn,selectedRow)
+activate SBPF
+return postItRequest
+
+UI -> DOS : writeUTF(createPostItRequest)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return : informs operation success
+
+@enduml

@@ -1,0 +1,85 @@
+@startuml
+autonumber
+title ShareBoard - SharedBoardServer
+
+participant AttendClient as AC <<Application>>
+participant ChangePostItContentRequest as REQ
+participant DataInputStream as DIS
+participant DataOutputStream as DOS
+participant SBPMessageFormat as SBPMF
+control ChangePostItContentController as CONTROLLER <<ShareBoardServer>> <<Application>>
+participant ChangePostItContentService as SERVICE <<Service>>
+participant Board as BOARD <<Domain>>
+participant Cell as CELL <<Domain>>
+participant PostIt as POST_IT <<Domain>>
+participant PostItFactory as P_FAC <<Domain>>
+participant BoardHistory as BOARD_HIS <<Domain>>
+participant Person as PERSON <<Domain>>
+database BoardRepository as BOARD_REPO <<Persistence>>
+database PostItRepository as POST_IT_REPO <<Persistence>>
+
+
+activate AC
+AC -> DIS : create(socket)
+activate DIS
+deactivate DIS
+AC -> DOS : create(socket)
+activate DOS
+deactivate DOS
+AC -> DIS : readUTF()
+activate DIS
+return message
+AC -> REQ : changePostItPosition(message, dos)
+activate REQ
+REQ -> SBPMF : decodeFormat(message)
+activate SBPMF
+return arrayFormat
+REQ -> SBPMF : decodeParams(message)
+activate SBPMF
+return params
+REQ -> CONTROLLER : changePostItContent(boardTitle, row, column, content)
+activate CONTROLLER
+CONTROLLER -> SERVICE : changePostItContent(boardTitle, row, column, content)
+activate SERVICE
+SERVICE -> BOARD_REPO : findBoardByTitle(boardTitle)
+activate BOARD_REPO
+return board
+SERVICE -> PERSON : boardParticipantOfBoard(board)
+activate PERSON
+return boardParticipant
+SERVICE -> PERSON : boardOwnerOfBoard(board)
+activate PERSON
+return boardOwner
+SERVICE -> BOARD : verifyPostItCanBeUpdated(row, column, boardParticipant, boardOwner)
+activate BOARD
+BOARD -> CELL : currentPostIt()
+activate CELL
+return postIt
+BOARD -> BOARD_HIS : checkIfPostItCanBeUpdatedByUser(postIt, boardParticipant, boardOwner)
+activate BOARD_HIS
+return boolean
+return oldPostIt
+SERVICE -> P_FAC : buildFromExistingPostIt(content, postItKey)
+activate P_FAC
+return newPostIt
+SERVICE -> POST_IT_REPO : save(newPostIt)
+activate POST_IT_REPO
+deactivate POST_IT_REPO
+SERVICE -> BOARD : updateCell(newPostIt,row,column)
+activate BOARD
+return boolean
+SERVICE -> BOARD_REPO : save(board)
+activate BOARD_REPO
+deactivate BOARD_REPO
+return operation success
+return operation success
+deactivate CONTROLLER
+REQ -> SBPMF : createAcknowledgeRequest()
+activate SBPMF
+return ackRequest
+REQ -> DOS : writeUTF(ackRequest)
+activate DOS
+deactivate DOS
+deactivate REQ
+deactivate AC
+@enduml

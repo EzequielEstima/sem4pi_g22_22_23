@@ -1,0 +1,46 @@
+@startuml
+participant CourseMapper as COURSE_MAP <<dto>>
+participant CourseDTOBuilder as COURSE_DTO_BUILD <<builder>>
+participant Course as COURSE <<domain>>
+participant CourseDTOWithIdTitle as COURSE_DTO <<dto>>
+participant CourseTitle as COURSE_TITLE <<domain>>
+participant CourseIdentifier as COURSE_ID <<domain>>
+autonumber
+
+activate COURSE_MAP
+
+COURSE_MAP -> COURSE_DTO_BUILD : create()
+activate COURSE_DTO_BUILD
+deactivate COURSE_DTO_BUILD
+COURSE_MAP -> COURSE : returnCourseTitleString()
+activate COURSE
+COURSE -> COURSE_TITLE : returnCourseTitleString()
+activate COURSE_TITLE
+COURSE_TITLE --> COURSE : course_title
+deactivate COURSE_TITLE
+COURSE --> COURSE_MAP : course_title
+deactivate COURSE
+COURSE_MAP -> COURSE_DTO_BUILD : withCourseIdentifier()
+activate COURSE_DTO_BUILD
+COURSE_DTO_BUILD --> COURSE_MAP : courseDTOBuilder
+deactivate COURSE_DTO_BUILD
+COURSE_MAP -> COURSE : returnCourseIdentifierString()
+activate COURSE
+COURSE -> COURSE_ID : returnCourseIdentifierString()
+activate COURSE_ID
+COURSE_ID --> COURSE : course_Id
+deactivate COURSE_ID
+COURSE --> COURSE_MAP : course_Id
+deactivate COURSE
+COURSE_MAP -> COURSE_DTO_BUILD : withCourseTitle()
+activate COURSE_DTO_BUILD
+COURSE_DTO_BUILD --> COURSE_MAP : courseDTOBuilder
+deactivate COURSE_DTO_BUILD
+COURSE_MAP -> COURSE_DTO_BUILD : buildWithIdTitle()
+activate COURSE_DTO_BUILD
+COURSE_DTO_BUILD -> COURSE_DTO : create(courseIdentifier, courseTitle, courseStatus)
+activate COURSE_DTO
+deactivate COURSE_DTO
+deactivate COURSE_DTO_BUILD
+deactivate COURSE_MAP
+@enduml

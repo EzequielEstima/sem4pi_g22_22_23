@@ -1,0 +1,28 @@
+@startuml
+autonumber
+
+title Show Number Of Cells In The Board - SharedBoardClient
+
+actor "User" as User
+
+participant ": CreatePostItUI" as UI <<SharedBoardClient>> <<Presentation>>
+participant ": SBPMessageFormat" as SBPF
+participant ": DataOutputStream" as DOS
+participant ": DataInputStream" as DIS
+activate User
+User -> UI : wants to see the number of cells in the board
+activate UI
+
+UI -> SBPF : createShowNumberOfCellsRequestSend()
+activate SBPF
+return showNumberOfCellsRequestSend
+
+UI -> DOS : writeUTF(showNumberOfCellsRequestSend)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return : show number of cells in the board
+
+@enduml

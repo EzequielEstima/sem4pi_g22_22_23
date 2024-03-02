@@ -1,0 +1,61 @@
+@startuml
+autonumber
+title Create Post-It - SharedBoardServer
+
+participant ": AttendClient" as AC <<Application>>
+participant ": DataInputStream" as DIS
+participant ": DataOutputStream" as DOS
+participant ": SBPMessageFormat" as SBPMF
+control "CreatePostItController" as CTRL <<ShareBoardServer>> <<Application>>
+participant ": CreatePostItService" as CPS <<Service>>
+participant ": PostItFactory" as PF <<Factory>>
+participant ": PostIt" as P <<Domain>>
+participant ": Board" as B <<Domain>>
+database ": BoardRepository" as BR <<Repository>>
+database ": PostItRepository" as PR <<Repository>>
+activate AC
+AC -> DIS : readUTF()
+activate DIS
+return message
+AC -> SBPMF : decodeParams(message)
+activate SBPMF
+return params
+AC -> CTRL : createPostIt(boardTittle, content, column, row)
+activate CTRL
+CTRL -> CPS : createPostIt(boardTittle, content, column, row)
+activate CPS
+
+CPS -> PF : build()
+activate PF
+PF -> P : createPostIt()
+activate P
+return postIt
+return postIt
+CPS -> BR : findBoardByTitle(boardTitle)
+BR -> CPS : board
+CPS -> B : addPostIt(postIt, column, row);
+activate B
+deactivate B
+CPS -> CPS : verify if user is owner or participant in the board
+CPS -> B : addTaskToHistory(task)
+activate B
+deactivate B
+CPS -> B : addNotification(notification)
+activate B
+deactivate B
+CPS -> PR : save(postIt)
+CPS -> BR : save(board)
+
+CPS --> CTRL : true
+deactivate CPS
+CTRL --> AC : true
+deactivate CTRL
+AC -> SBPMF : createAcknowledgeRequest()
+activate SBPMF
+return ackRequest
+AC -> DOS : writeUTF(ackRequest)
+activate DOS
+deactivate DOS
+deactivate AC
+
+@enduml

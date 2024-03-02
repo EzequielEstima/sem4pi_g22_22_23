@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+title Undo Last Change In A Post-It - SharedBoardClient
+
+actor User
+
+participant "UndoLastChangeInPostItUI" as UI <<presentation>>
+
+participant ": SBPMessageFormat" as SBPF
+participant ": DataOutputStream" as DOS
+participant ": DataInputStream" as DIS
+
+activate User
+
+User -> UI : chooses board
+activate UI
+
+UI -> SBPF : createUndoLastChangePostItRequest(board,selectedColumn,selectedRow)
+activate SBPF
+return undoLastChangePostItRequest
+
+UI -> DOS : writeUTF(undoLastChangePostItRequest)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return : informs operation success
+
+deactivate UI
+
+@enduml

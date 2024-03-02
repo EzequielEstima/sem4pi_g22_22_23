@@ -1,0 +1,34 @@
+-----------------Select Missing Words Question-----------------
+Introduction
+Sentence start ||WORD1|| sentence middle ||WORD2|| sentence ending
+
+WORD1:
+- Example1
+- Example2
+- Example3
+- Example4
+
+WORD2:
+- Example1
+- Example2
+- Example3
+- Example4
+---------------------------------------------------------
+----------Select Missing Words Question Example----------
+
+Please select the correct missing words.
+The best island in Portugal is ||WORD1|| because it has ||WORD2||
+ 
+WORD1:
+1. Madeira
+2. Porto Santo
+3. Berlengas
+4. Ilhéu da Pontinha
+
+WORD2:
+1. Bolo do Caco
+2. Poncha
+3. Mel de Cana
+4. Venezuelans
+
+------------------------------------------------------------

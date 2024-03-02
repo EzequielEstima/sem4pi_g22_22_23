@@ -1,0 +1,29 @@
+@startuml
+autonumber
+title ArchiveBoard - SharedBoardClient
+
+actor "User" as User
+
+participant ": ArchiveBoardUI" as UI <<SharedBoardClient>> <<Presentation>>
+participant ": SBPMessageFormat" as SBPF
+participant ": DataOutputStream" as DOS
+participant ": DataInputStream" as DIS
+activate User
+User -> UI : chooses board
+activate UI
+
+
+UI -> SBPF : createArchiveBoardRequest(boardTitle)
+activate SBPF
+return archiveBoardRequest
+
+
+UI -> DOS : writeUTF(archiveBoardRequest)
+activate DOS
+deactivate DOS
+UI -> DIS : readUTF()
+activate DIS
+return message
+return : informs operation success
+deactivate UI
+@enduml

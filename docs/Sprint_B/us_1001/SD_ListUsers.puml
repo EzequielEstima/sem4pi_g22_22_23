@@ -1,0 +1,74 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+autonumber
+
+actor Manager
+participant "ListUsersUI" as ui <<presentation>>
+participant "ListUsersController" as ctrl <<application>>
+participant AuthorizationService as authSV <<application>>
+
+participant ListUserService as service <<application>>
+participant AuthzRegistry as auth <<application>>
+participant UserManagementService as userManSV <<application>>
+participant SystemUser as sU  <<domain>>
+participant GeneralDTO as dto  <<DTO>>
+
+database UserRepository as userRep <<repository>>
+
+
+Manager --> ui : ListUser
+activate Manager
+activate ui
+ui -> ctrl: create
+activate ctrl
+
+ctrl -> auth: authorizationService()
+activate auth
+auth -> ctrl: authz
+deactivate auth
+deactivate ctrl
+
+ui->ctrl: listAllUsers()
+activate ctrl
+ctrl -> authSV : ensureAuthenticatedUserHasAnyOf(BaseRoles.POWER_USER, BaseRoles.MANAGER)
+ctrl -> service : create
+ctrl -> service : listAllUsers()
+activate service
+service -> auth: userService()
+activate auth
+auth -> service: userSvc
+deactivate auth
+service->userManSV : allUsers()
+activate userManSV
+userManSV -> userRep : findAll()
+activate userRep
+userRep -> userManSV : Iterable<SystemUser>
+deactivate userRep
+userManSV -> service : Iterable<SystemUser>
+deactivate userManSV
+
+loop for all SystemUser in Iterable
+service -> sU : SystemUser.toDto()
+activate sU
+sU -> dto: create("user")
+activate dto
+sU -> dto: put("username", username.toString());
+sU -> dto: put("name", name.toString());
+sU -> dto: put("email", email.toString());
+sU -> dto: put("roles", roles.roleTypes().toString());
+deactivate dto
+sU -> service : GeneralDTO
+deactivate sU
+end loop
+service ->ctrl : listUsersDTO
+deactivate service
+ctrl -> ui : listUsersDTO
+deactivate ctrl
+ui -> Manager: shows list users
+deactivate ui
+deactivate Manager
+
+@enduml

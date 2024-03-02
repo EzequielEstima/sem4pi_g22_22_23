@@ -1,0 +1,6 @@
+#Numerical
+#Points: 10
+#Question: How long is 5ft in meters?
+#Answer:
+#Solution: 1,52 m
+#Feedback: This is a simple conversion question

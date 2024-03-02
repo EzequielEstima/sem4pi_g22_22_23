@@ -1,0 +1,39 @@
+@startuml
+actor Teacher as T
+participant "ViewCoursesGradesUI" as UI <<Presentation>>
+control "ViewCoursesGradesController" as CTRL <<Application>>
+participant "ViewCoursesGradesService" as S <<Service>>
+database "CourseRepository" as CR <<Persistence>>
+database "ExamRepository" as ER <<Persistence>>
+database "ExamResolutionRepository" as ERR <<Persistence>>
+participant "ExamResolution" as ExamR <<Domain>>
+
+
+T->UI: Selects the courses that he \nwants to see the grades from
+activate T
+activate UI
+UI->CTRL : listGradesFromTeacherCourse(courses)
+activate CTRL
+CTRL->S: listGradesFromTeacherCourse(courses)
+activate S
+loop foreach course in courseList
+S-> ER : findExamsFromCourse(courseIdentifier)
+activate ER
+return examList
+end loop
+loop foreach exam in examList
+S-> ERR : findExamResolutionsByExamId(examTitle)
+activate ERR
+return examResolutionList
+end loop
+loop foreach examResolution in examResolutionList
+S-> ExamR : returnGradeString()
+activate ExamR
+return grade
+end loop
+return gradesList
+return gradesList
+return show all grades from teacher\n selected courses
+deactivate UI
+deactivate T
+@enduml
